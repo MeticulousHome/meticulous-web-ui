@@ -34,7 +34,7 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
     (profileId: string) => {
       if (!profiles) return profileId;
       const profile = profiles.find(
-        (p: ProfileIdent) => p.profile.id === profileId,
+        (p: ProfileIdent) => p.profile?.id === profileId,
       );
       return profile ? profile.profile.name : profileId;
     },
