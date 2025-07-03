@@ -1,0 +1,45 @@
+.m-text {
+  font-style: normal;
+}
+
+.m-text-sm {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 10.8px;
+  letter-spacing: 0.12px;
+}
+
+.m-text-base {
+  font-size: 14px;
+  font-weight: 360;
+  line-height: 16.9px;
+  letter-spacing: -0.28px;
+}
+
+.m-text-lg {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 18px; /* 18px */
+  letter-spacing: -0.3px;
+}
+
+.m-text-xl {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 14.4px;
+  letter-spacing: -0.32px;
+}
+
+.m-text-2xl {
+  font-size: 16px;
+  font-weight: 473;
+  line-height: 14.4px;
+  letter-spacing: -0.32px;
+}
+
+.m-text-3xl {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 16.2px;
+  letter-spacing: -0.36px;
+}

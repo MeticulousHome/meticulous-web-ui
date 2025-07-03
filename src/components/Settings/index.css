@@ -1,0 +1,76 @@
+
+@keyframes containerInitial {
+  0% {
+    background: rgba(0, 0, 0, 0.0);
+  }
+
+  100% {
+    background: rgba(0, 0, 0, 0.6);
+  }
+}
+.bottom-modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  overflow: hidden;
+  animation: containerInitial forwards 0.25s ease-out;
+}
+
+.bottom-modal {
+  background: #272727;
+}
+
+@keyframes initialAnim {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes initialTabletAnim {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes outAnim {
+  0% {
+    transform: translateY(0%);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes outTabletAnim {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.initial-anim {
+  animation: initialAnim forwards 0.25s ease-out;
+}
+.initial-tablet-anim {
+  animation: initialTabletAnim forwards 0.25s ease-out;
+}
+
+.close-modal {
+  animation: outAnim forwards 0.20s ease-out;
+}
+.close-tablet-modal {
+  animation: outTabletAnim forwards 0.20s ease-out;
+}

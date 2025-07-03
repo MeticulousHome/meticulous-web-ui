@@ -1,0 +1,23 @@
+.switch {
+  width: 40px;
+  height: 24px;
+  background-color: #2c2c28;
+  padding: 2px;
+  transition: background-color 0.4s;
+}
+
+.slider {
+  width: 20px;
+  height: 20px;
+  background-color: #4b4b48;
+  transition: transform 0.4s;
+}
+
+.slider.active {
+  transform: translateX(16px);
+  background-color: black;
+}
+
+.switch.active {
+  background-color: white;
+}
