@@ -1,7 +1,6 @@
-
 @keyframes containerInitial {
   0% {
-    background: rgba(0, 0, 0, 0.0);
+    background: rgba(0, 0, 0, 0);
   }
 
   100% {
@@ -69,8 +68,8 @@
 }
 
 .close-modal {
-  animation: outAnim forwards 0.20s ease-out;
+  animation: outAnim forwards 0.2s ease-out;
 }
 .close-tablet-modal {
-  animation: outTabletAnim forwards 0.20s ease-out;
+  animation: outTabletAnim forwards 0.2s ease-out;
 }
