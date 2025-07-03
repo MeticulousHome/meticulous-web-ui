@@ -71,9 +71,9 @@ export const BottomModal = ({
            ${animationClass}`}
       >
         <div
-          className={`${orientation === "horizontal" ? "h-full w-full flex flex-col justify-center " : ""}`}
+          className={`flex flex-col ${orientation === "horizontal" ? "h-full w-full justify-center" : ""}`}
         >
-          <div className="p-8">{children}</div>
+          <div className="p-8 flex-1 overflow-auto min-h-0">{children}</div>
         </div>
       </div>
     </div>
