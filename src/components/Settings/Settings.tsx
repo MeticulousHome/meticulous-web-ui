@@ -10,8 +10,8 @@ import {
   ReadOnlyField,
   StringField,
 } from "./SettingFields";
-import type { ProfileIdent, Settings } from "@meticulous-home/espresso-api";
-
+import type { Settings } from "@meticulous-home/espresso-api";
+import type { Profile } from "@meticulous-home/espresso-profile";
 interface SettingsProps {
   isOpen: boolean;
   onClose: () => void;
@@ -33,10 +33,8 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
   const getProfileName = useCallback(
     (profileId: string) => {
       if (!profiles) return profileId;
-      const profile = profiles.find(
-        (p: ProfileIdent) => p.profile?.id === profileId,
-      );
-      return profile ? profile.profile.name : profileId;
+      const profile = profiles.find((p: Profile) => p.id === profileId);
+      return profile ? profile.name : profileId;
     },
     [profiles],
   );

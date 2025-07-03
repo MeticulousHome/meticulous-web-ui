@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/api";
-import type { APIError, ProfileIdent } from "@meticulous-home/espresso-api";
+import type { APIError } from "@meticulous-home/espresso-api";
+import type { Profile } from "@meticulous-home/espresso-profile";
 
-async function getProfiles(): Promise<ProfileIdent[]> {
+async function getProfiles(): Promise<Profile[]> {
   try {
-    const response = await api.listProfiles();
+    const response = await api.fetchAllProfiles();
     const data = response.data;
     if ("error" in data) {
       throw new Error((data as APIError).error);
