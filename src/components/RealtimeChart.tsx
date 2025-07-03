@@ -113,24 +113,29 @@ export const RealtimeChart = ({
     if (!machineStatus) {
       return;
     }
-    if (!machineStatus.extracting) {
-      return;
-    }
+
     const instance = chartRef.current?.getEchartsInstance();
 
     // Clear the chart data if the machine was idle
-    if (lastMachineStatus.current?.state === "idle") {
+    if (
+      lastMachineStatus.current?.state === "idle" &&
+      machineStatus.state !== "idle"
+    ) {
+      console.log("Clearing chart data");
       config.series.forEach((_, index) => {
         config.series[index].data = [];
       });
       instance?.setOption({ ...config });
     }
+    lastMachineStatus.current = machineStatus;
 
+    if (!machineStatus.extracting) {
+      return;
+    }
     const new_config = updateChartData(config, name, machineStatus);
     if (new_config) {
       instance?.setOption({ ...new_config });
     }
-    lastMachineStatus.current = machineStatus;
   }, [machineStatus]);
 
   useEffect(() => {
