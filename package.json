@@ -7,7 +7,7 @@
     "dev": "export VITE_SERVER_URL=${SERVER_URL} && vite",
     "start": "export VITE_SERVER_URL=${SERVER_URL} && vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "preview": "vite preview",
     "format": "prettier --write .",
     "types": "tsc --noEmit"

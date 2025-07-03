@@ -12,7 +12,7 @@ async function getSettings(): Promise<Settings> {
     return data as Settings;
   } catch (error) {
     if (typeof error === "object" && error !== null && "response" in error) {
-      const err = error as { response: { data?: any } };
+      const err = error as { response: { data?: { message: string } } };
       console.error("Error getting Settings: ", err.response.data);
       throw new Error(err.response.data?.message || "Error getting Settings.");
     } else {
@@ -33,7 +33,7 @@ async function updateSettings(update: Partial<Settings>): Promise<Settings> {
     return data as Settings;
   } catch (error) {
     if (typeof error === "object" && error !== null && "response" in error) {
-      const err = error as { response: { data?: any } };
+      const err = error as { response: { data?: { message: string } } };
       console.error("Error updating settings: ", err.response.data);
       throw new Error(err.response.data?.message || "Error updating settings.");
     } else {
