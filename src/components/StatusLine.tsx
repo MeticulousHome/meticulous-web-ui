@@ -48,7 +48,15 @@ export const StatusLine = () => {
       />
       <StatusEntry label="Pressure" value={pressure.toFixed(1)} unit="bar" />
       <StatusEntry label="Flow" value={flow.toFixed(1)} unit="ml/s" />
-      <StatusEntry label="Weight" value={weight.toFixed(1)} unit="g" />
+      <StatusEntry
+        label="Weight"
+        value={
+          typeof weight === "number" && !isNaN(weight)
+            ? weight.toFixed(1)
+            : String(weight)
+        }
+        unit="g"
+      />
       <StatusEntry label="Grav. Flow" value={grav_flow.toFixed(1)} unit="g/s" />
     </div>
   );
