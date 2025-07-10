@@ -24,5 +24,5 @@ export default defineConfig([
     },
   },
   reactRefresh.configs.recommended,
-  globalIgnores(["dist/*"]),
+  globalIgnores(["dist/*", "out/*"]),
 ]);
