@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSocketData } from "../contexts/SocketProvider";
 import { Text } from "./Text/Text";
+import {
+  DebugDataChart,
+  type DebugDataChartRef,
+  type SensorDataPoint,
+} from "./DebugDataChart";
 
 const DebugEntry = ({ label, value }: { label: string; value: string }) => {
   return (
@@ -51,11 +56,56 @@ const debugKeyLabels: Record<string, string> = {
 export const DebugData = () => {
   const { sensors: debugData } = useSocketData() as { sensors: DebugDataType };
   const [showDebug, setShowDebug] = useState(false);
+  const temperatureChartRef = useRef<DebugDataChartRef>(null);
+  const motorChartRef = useRef<DebugDataChartRef>(null);
+  const powerChartRef = useRef<DebugDataChartRef>(null);
+  const miscCartRef = useRef<DebugDataChartRef>(null);
+  const [recordAllData, setRecordAllData] = useState(false);
+  const [pausePlotting, setPausePlotting] = useState(false);
+
+  useEffect(() => {
+    if (!pausePlotting) {
+      temperatureChartRef.current?.clearData();
+      motorChartRef.current?.clearData();
+      powerChartRef.current?.clearData();
+      miscCartRef.current?.clearData();
+    }
+  }, [pausePlotting]);
+
+  useEffect(() => {
+    if (!debugData || pausePlotting) {
+      return;
+    }
+    const temperatureData: SensorDataPoint = {};
+    const motorData: SensorDataPoint = {};
+    const powerData: SensorDataPoint = {};
+    const miscData: SensorDataPoint = {};
+    Object.entries(debugData).forEach(([key, value]) => {
+      const label = debugKeyLabels[key] ? debugKeyLabels[key] : key;
+      if (key.startsWith("t_") || key.endsWith("_temp")) {
+        if (typeof value == "number" && value >= 200) {
+          temperatureData[label] = NaN;
+        } else {
+          temperatureData[label] = value;
+        }
+      } else if (key.startsWith("m_")) {
+        motorData[label] = value;
+      } else if (key.startsWith("bh_")) {
+        powerData[label] = value;
+      } else {
+        miscData[label] = value;
+      }
+    });
+    temperatureChartRef.current?.pushData(temperatureData);
+    motorChartRef.current?.pushData(motorData);
+    powerChartRef.current?.pushData(powerData);
+    miscCartRef.current?.pushData(miscData);
+  }, [debugData, pausePlotting]);
 
   return (
-    <footer className="flex flex-col w-full row justify-center items-center fixed bottom-0 left-0 py-2">
+    <footer className="flex flex-col w-full row justify-center items-center py-2">
       {showDebug && (
-        <div className="bg-amber-800 mt-8 w-full p-2">
+        <div className="mt-8 w-full p-2" style={{ backgroundColor: "#212121" }}>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
             {Object.keys(debugData || {}).map((key) => (
               <DebugEntry
@@ -65,14 +115,52 @@ export const DebugData = () => {
               />
             ))}
           </div>
+          <div className="w-full flex justify-center items-center gap-3">
+            <button
+              className="p-2 border-2 border-gray-300 rounded-md shadow-sm mt-2 text-gray-300"
+              onClick={() => setRecordAllData((prev) => !prev)}
+            >
+              {recordAllData
+                ? "Plotting indefinetely"
+                : "Plotting the last minute"}
+            </button>
+            <button
+              className="p-2 border-2 border-gray-300 rounded-md shadow-sm mt-2 text-gray-300"
+              onClick={() => setPausePlotting((prev) => !prev)}
+            >
+              {pausePlotting
+                ? "Click to resume plotting"
+                : "Click to pause plotting"}
+            </button>
+          </div>
+          <div className="flex flex-row flex-wrap md:gap-4 mt-4 w-full">
+            <DebugDataChart
+              ref={temperatureChartRef}
+              maxPoints={recordAllData ? 0 : 600}
+            />
+            <DebugDataChart
+              ref={motorChartRef}
+              maxPoints={recordAllData ? 0 : 600}
+            />
+            <DebugDataChart
+              ref={powerChartRef}
+              maxPoints={recordAllData ? 0 : 600}
+            />
+            <DebugDataChart
+              ref={miscCartRef}
+              maxPoints={recordAllData ? 0 : 600}
+            />
+          </div>
         </div>
       )}
-      <button
-        className="p-2 border-2 border-gray-300 rounded-md shadow-sm  mt-2 text-gray-300"
-        onClick={() => setShowDebug((prev) => !prev)}
-      >
-        {showDebug ? "Hide raw sensor data" : "Show raw sensor data"}
-      </button>
+      <div className="w-full flex justify-center items-center fixed bottom-2">
+        <button
+          className="p-2 border-2 border-gray-300 rounded-md shadow-sm mt-2 text-gray-300"
+          onClick={() => setShowDebug((prev) => !prev)}
+        >
+          {showDebug ? "Hide raw sensor data" : "Show raw sensor data"}
+        </button>
+      </div>
     </footer>
   );
 };
