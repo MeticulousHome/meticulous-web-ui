@@ -5,7 +5,7 @@ const getDevURL = () => {
     return null;
   }
   let url = import.meta.env.VITE_SERVER_URL;
-  if (!url.startsWith("http://") || !url.startsWith("https://")) {
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
     url = `http://${url}`;
   }
   return url;
