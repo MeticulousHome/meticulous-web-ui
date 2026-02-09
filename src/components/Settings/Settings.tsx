@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDevice } from "../../hooks/useDevice";
 import { BottomModal } from "./BottomModal";
 import { useSettings, useUpdateSettings } from "../../hooks/useSettings";
@@ -28,6 +28,7 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
   const { data: profiles } = useProfiles();
   const mutation = useUpdateSettings();
 
+  const modifiedSettings = useRef<Partial<Settings>>({});
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
 
   const getProfileName = useCallback(
@@ -44,16 +45,24 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
   }, [settings]);
 
   const handleChange = (
-    key: string,
+    key: keyof Settings | "profile_order",
     value: boolean | number | string | object,
   ) => {
     setLocalSettings((prev) => (prev ? { ...prev, [key]: value } : prev));
+    modifiedSettings.current = {
+      ...modifiedSettings.current,
+      [key]: value,
+    } as Settings;
   };
 
   const handleSubmit = () => {
     if (!localSettings) return;
     if (mutation.isPending) return;
-    mutation.mutate(localSettings);
+    mutation.mutate(modifiedSettings.current, {
+      onSuccess: () => {
+        modifiedSettings.current = {};
+      },
+    });
   };
 
   if (isLoading)
@@ -172,16 +181,19 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
             }
           />
           <button
+            disabled={Object.keys(modifiedSettings.current).length === 0}
             onClick={handleSubmit}
             className="p-2 border-2 border-gray-300 rounded-md shadow-sm bg-green-950 mt-2 text-white text-2xl"
           >
-            {mutation.isError
-              ? `Failed to save: ${mutation.error}`
-              : mutation.isPending
-                ? "Saving..."
-                : mutation.isSuccess
-                  ? "Saved"
-                  : "Save Settings"}
+            {Object.keys(modifiedSettings.current).length > 0
+              ? "Save Settings"
+              : mutation.isError
+                ? `Failed to save: ${mutation.error}`
+                : mutation.isPending
+                  ? "Saving..."
+                  : mutation.isSuccess
+                    ? "Saved"
+                    : "Nothing to save"}
           </button>
         </>
       )}
