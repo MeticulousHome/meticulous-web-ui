@@ -19,7 +19,7 @@ export const SERVER_URL =
 
 export const WATCHER_URL =
   typeof window !== "undefined"
-    ? `${window.location.protocol}//${window.location.hostname}:3000`
+    ? `${window.location.protocol}//${window.location.hostname}/health`
     : "http://localhost:3000";
 
 export const api = new Api(undefined, SERVER_URL);
