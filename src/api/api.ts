@@ -17,6 +17,11 @@ export const SERVER_URL =
       `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
     : "http://localhost:8080";
 
+export const WATCHER_URL =
+  typeof window !== "undefined"
+    ? `${window.location.protocol}//${window.location.hostname}/health`
+    : "http://localhost:3000";
+
 export const api = new Api(undefined, SERVER_URL);
 
 export const getLastShot = async (): Promise<HistoryEntry | null> => {
