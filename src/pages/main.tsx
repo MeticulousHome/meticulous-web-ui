@@ -14,11 +14,13 @@ import { useLastShot } from "../hooks/useHistory";
 import { useState } from "react";
 import { MachineSettings } from "../components/Settings/Settings";
 import { DebugData } from "../components/DebugData";
+import { LogDownload } from "../components/LogDownload";
 
 export function RealTimePage() {
   const { device } = useDevice();
   const lastShot = useLastShot();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLogDownloadOpen, setIsLogDownloadOpen] = useState(false);
 
   const lastProfile = lastShot.isLoading
     ? "Loading..."
@@ -31,14 +33,24 @@ export function RealTimePage() {
           <div className="text-gray-secondary md:text-lg">
             Profile: <span className="text-white">{lastProfile}</span>
           </div>
-          <button
-            onClick={() => {
-              setIsSettingsOpen(true);
-            }}
-            className="p-2"
-          >
-            <SettingsIcon />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsLogDownloadOpen(true)}
+              className="rounded-md border border-gray-500 px-3 py-2 text-white"
+            >
+              Download logs
+            </button>
+            <button
+              onClick={() => {
+                setIsSettingsOpen(true);
+              }}
+              className="p-2"
+              aria-label="Open settings"
+            >
+              <SettingsIcon />
+            </button>
+          </div>
         </div>
 
         {device === "MOBILE" ? (
@@ -92,6 +104,10 @@ export function RealTimePage() {
       <MachineSettings
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+      <LogDownload
+        isOpen={isLogDownloadOpen}
+        onClose={() => setIsLogDownloadOpen(false)}
       />
     </>
   );
