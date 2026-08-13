@@ -40,7 +40,7 @@ const debugKeyLabels: Record<string, string> = {
   m_pos: "Motor Position",
   m_pwr: "Motor Setpoint",
   m_spd: "Motor Speed",
-  motor_temp: "Motor Temp",
+  motor_temp: "CUP_TEMP",
   p: "Pressure Sensor Rate",
   t_bar_down: "Bar Down",
   t_bar_md: "Bar Mid",
