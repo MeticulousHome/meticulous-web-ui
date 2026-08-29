@@ -27,11 +27,24 @@ export const storeToken = (token: string): void => {
     // localStorage unavailable (private mode, etc.) - the token just won't
     // persist across reloads; the current session still works.
   }
+  // Also keep it in a SameSite=Strict cookie: the backend accepts it, so this
+  // browser can open any API endpoint straight from the address bar once
+  // authorized. Strict means other sites can never make the browser attach it.
+  try {
+    document.cookie = `met_device_token=${token}; Path=/; Max-Age=31536000; SameSite=Strict`;
+  } catch {
+    // ignore
+  }
 };
 
 export const clearToken = (): void => {
   try {
     localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // ignore
+  }
+  try {
+    document.cookie = "met_device_token=; Path=/; Max-Age=0; SameSite=Strict";
   } catch {
     // ignore
   }
