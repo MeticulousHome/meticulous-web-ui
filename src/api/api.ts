@@ -1,4 +1,5 @@
 import Api, { type HistoryEntry } from "@meticulous-home/espresso-api";
+import { getStoredToken, clearToken } from "./pairing";
 
 const getDevURL = () => {
   if (!import.meta.env.DEV || !import.meta.env.VITE_SERVER_URL) {
@@ -22,7 +23,22 @@ export const WATCHER_URL =
     ? `${window.location.protocol}//${window.location.hostname}/health`
     : "http://localhost:3000";
 
-export const api = new Api(undefined, SERVER_URL);
+// The stored device token authorizes every REST call (attached as a bearer
+// header by the client). If the machine answers 401 the token is stale/revoked:
+// clear it and reload so the app drops back to the authorize screen instead of
+// silently showing "Loading..." forever.
+export const api = new Api(
+  {
+    onUnauthorized: () => {
+      clearToken();
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
+    },
+  },
+  SERVER_URL,
+  getStoredToken() || undefined,
+);
 
 export const getLastShot = async (): Promise<HistoryEntry | null> => {
   try {
