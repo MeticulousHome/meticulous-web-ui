@@ -77,6 +77,52 @@ export const api = new Api(
 );
 api.setCredential(initialCredential);
 
+// Newer espresso-api builds return the exact token whose credential remained
+// current throughout an asynchronous proof. Keep a generation-safe fallback
+// until the git dependency lock can advance to that build: after awaiting an
+// old ensureVerified(), never read a replacement credential and release its
+// token under the completed proof.
+const getVerifiedMachineToken = async (): Promise<string | undefined> => {
+  const atomicApi = api as typeof api & {
+    getVerifiedToken?: () => Promise<string | undefined>;
+  };
+  if (typeof atomicApi.getVerifiedToken === "function") {
+    return atomicApi.getVerifiedToken();
+  }
+
+  const startedWithCredential = api.getCredential() !== undefined;
+  while (api.getCredential()) {
+    const credential = api.getCredential();
+    if (!credential) break;
+    const snapshot = {
+      serial: credential.serial,
+      fingerprint: credential.fingerprint,
+      publicKey: credential.publicKey,
+      token: credential.token,
+    };
+    const result = await api.ensureVerified();
+    const current = api.getCredential();
+    if (
+      current !== credential ||
+      current.serial !== snapshot.serial ||
+      current.fingerprint !== snapshot.fingerprint ||
+      current.publicKey !== snapshot.publicKey ||
+      current.token !== snapshot.token
+    ) {
+      continue;
+    }
+    if (result !== "ok") {
+      if (result !== "unreachable") {
+        handleIdentityChanged(new URL(SERVER_URL).origin, result);
+      }
+      throw new MachineIdentityError(result, new URL(SERVER_URL).origin);
+    }
+    return snapshot.token;
+  }
+
+  return startedWithCredential ? undefined : api.getToken();
+};
+
 export const markIdentityRecovered = () => {
   const credential = api.getCredential();
   if (credential) storeCredential({ ...credential, state: "ok" });
@@ -90,20 +136,22 @@ export const verifiedMachineFetch = async (
   path: string,
   init: RequestInit = {},
 ): Promise<Response> => {
-  const result = await api.ensureVerified();
-  if (result !== "ok") {
-    handleIdentityChanged(new URL(SERVER_URL).origin, result);
-    throw new MachineIdentityError(result, new URL(SERVER_URL).origin);
-  }
-  const credential = api.getCredential();
+  const token = await getVerifiedMachineToken();
   const headers = new Headers(init.headers);
-  if (credential) headers.set("Authorization", `Bearer ${credential.token}`);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(new URL(path, SERVER_URL), {
     ...init,
     headers,
     redirect: "error",
   });
-  if (response.status === 401) handleUnauthorized();
+  // A late 401 from a superseded token must not clear a credential paired
+  // while this fetch was in flight (ADV-016).
+  if (
+    response.status === 401 &&
+    (!token || api.getCredential()?.token === token)
+  ) {
+    handleUnauthorized();
+  }
   return response;
 };
 
