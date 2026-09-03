@@ -8,10 +8,13 @@ const queryClient = new QueryClient();
 // Decides what to render from the connection state so the user is never left
 // with a blank or broken screen and no explanation.
 function ConnectionGate() {
-  const { connection, errorMessage } = useSocketData();
+  const { connection, errorMessage, legacyMachine } = useSocketData();
 
   if (connection === "unauthorized") {
     return <AuthorizeGate reason="unauthorized" />;
+  }
+  if (connection === "identity_changed") {
+    return <AuthorizeGate reason="identity_changed" />;
   }
   if (connection === "error") {
     return <AuthorizeGate reason="error" />;
@@ -25,7 +28,20 @@ function ConnectionGate() {
       </div>
     );
   }
-  return <RealTimePage />;
+  return (
+    <>
+      {legacyMachine && (
+        <div
+          role="status"
+          className="fixed top-0 inset-x-0 z-50 bg-amber-900 px-4 py-2 text-center text-sm text-white"
+        >
+          This machine needs a software update to secure the connection. No
+          saved authorization is being sent.
+        </div>
+      )}
+      <RealTimePage />
+    </>
+  );
 }
 
 function App() {

@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { io } from "socket.io-client";
 
 import type { StatusData } from "@meticulous-home/espresso-api";
-import { SERVER_URL } from "../api/api";
-import { getStoredToken } from "../api/pairing";
+import {
+  api,
+  getIdentityIssue,
+  markIdentityRecovered,
+  subscribeToIdentityIssue,
+} from "../api/api";
+import { clearCredential, getStoredCredential } from "../api/pairing";
 
 // Connection lifecycle, surfaced so no screen ever fails silently:
 //  connecting   - trying to reach the machine
@@ -15,6 +19,7 @@ export type ConnectionState =
   | "connecting"
   | "connected"
   | "unauthorized"
+  | "identity_changed"
   | "error";
 
 interface SocketContextType {
@@ -22,6 +27,7 @@ interface SocketContextType {
   sensors: object | null;
   connection: ConnectionState;
   errorMessage: string | null;
+  legacyMachine: boolean;
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -29,6 +35,7 @@ const SocketContext = createContext<SocketContextType>({
   sensors: null,
   connection: "connecting",
   errorMessage: null,
+  legacyMachine: false,
 });
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -41,31 +48,63 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const [sensorData, setSensorData] = useState<object | null>(null);
   const [connection, setConnection] = useState<ConnectionState>("connecting");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [legacyMachine, setLegacyMachine] = useState(false);
 
   useEffect(() => {
-    const token = getStoredToken();
-    const newSocket = io(SERVER_URL, {
-      transports: ["websocket"],
-      auth: token ? { token } : {},
+    const unsubscribeIdentity = subscribeToIdentityIssue((issue) => {
+      if (issue) {
+        setConnection("identity_changed");
+        setErrorMessage(`Machine identity ${issue.result}.`);
+      }
     });
 
+    void api
+      .getDeviceInfo()
+      .then((response) => {
+        const machine = response.data as { identity?: unknown };
+        setLegacyMachine(!machine.identity);
+      })
+      .catch(() => {
+        // The socket state below provides the visible connection error.
+      });
+
+    api.connectToSocket();
+    const newSocket = api.getSocket();
+    if (!newSocket) {
+      setConnection("error");
+      setErrorMessage("Could not create the machine connection.");
+      return unsubscribeIdentity;
+    }
+
     newSocket.on("connect", () => {
+      markIdentityRecovered();
       setConnection("connected");
       setErrorMessage(null);
     });
 
-    newSocket.on("disconnect", () => {
+    newSocket.on("disconnect", (reason) => {
       // A clean disconnect while we were connected: fall back to connecting so
       // the UI shows a reconnecting state rather than going blank.
       setConnection((prev) => (prev === "connected" ? "connecting" : prev));
+      if (reason === "io server disconnect") newSocket.connect();
     });
 
     newSocket.on("connect_error", (err: Error) => {
       // The machine refuses unauthorized clients at the handshake. Treat a
       // refusal (or the absence of a token) as "needs authorization"; anything
       // else is a genuine connectivity error.
-      const refused = /unauthor/i.test(err?.message || "") || !token;
+      if (getIdentityIssue()) {
+        setConnection("identity_changed");
+        return;
+      }
+      const refused =
+        /unauthor/i.test(err?.message || "") || !getStoredCredential();
       if (refused) {
+        const rejected = api.getCredential();
+        const stored = getStoredCredential();
+        if (rejected && stored?.token === rejected.token) clearCredential();
+        newSocket.io.reconnection(false);
+        api.disconnectSocket();
         setConnection("unauthorized");
       } else {
         setConnection("error");
@@ -82,7 +121,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     return () => {
-      newSocket.disconnect();
+      unsubscribeIdentity();
+      api.disconnectSocket();
     };
   }, []);
 
@@ -93,6 +133,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         sensors: sensorData,
         connection,
         errorMessage,
+        legacyMachine,
       }}
     >
       {children}

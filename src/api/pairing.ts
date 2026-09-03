@@ -1,92 +1,73 @@
-// Device pairing for the web-app. The machine's local API authenticates LAN
-// clients with a per-device token obtained by approving on the machine screen.
-// These calls are same-origin (served by the machine) and need no token; the
-// resulting token is stored in this origin's localStorage and reused.
+// Persist the machine identity and bearer as one credential. The raw-token key
+// and cookie are deliberately removed: neither can be gated by an identity
+// challenge before the browser attaches it.
 
-const TOKEN_KEY = "meticulous.deviceToken";
+export const MACHINE_CREDENTIAL_KEY = "meticulous.machineCredential";
+const LEGACY_TOKEN_KEY = "meticulous.deviceToken";
 
-// Same-origin base. Using location.origin avoids the trailing-colon quirk of the
-// port-suffixed SERVER_URL when served on :80.
-const base = () =>
-  typeof window !== "undefined"
-    ? window.location.origin
-    : "http://localhost:8080";
+export interface StoredMachineCredential {
+  serial: string;
+  fingerprint: string;
+  publicKey: string;
+  token: string;
+  lastOrigin?: string;
+  state?: "ok" | "identity_changed";
+}
 
-export const getStoredToken = (): string | null => {
+const clearLegacyArtifacts = () => {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
   } catch {
-    return null;
-  }
-};
-
-export const storeToken = (token: string): void => {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch {
-    // localStorage unavailable (private mode, etc.) - the token just won't
-    // persist across reloads; the current session still works.
-  }
-  // Also keep it in a SameSite=Strict cookie: the backend accepts it, so this
-  // browser can open any API endpoint straight from the address bar once
-  // authorized. Strict means other sites can never make the browser attach it.
-  try {
-    document.cookie = `met_device_token=${token}; Path=/; Max-Age=31536000; SameSite=Strict`;
-  } catch {
-    // ignore
-  }
-};
-
-export const clearToken = (): void => {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    // ignore
+    // Storage may be unavailable in private/restricted contexts.
   }
   try {
     document.cookie = "met_device_token=; Path=/; Max-Age=0; SameSite=Strict";
   } catch {
-    // ignore
+    // document is unavailable during non-browser builds.
   }
 };
 
-export interface PairingRequest {
-  pairing_id: string;
-  expires_in: number;
-}
+export const getStoredCredential = (): StoredMachineCredential | undefined => {
+  clearLegacyArtifacts();
+  try {
+    const value = localStorage.getItem(MACHINE_CREDENTIAL_KEY);
+    if (!value) return undefined;
+    const raw = JSON.parse(value) as Partial<StoredMachineCredential> & {
+      public_key?: string;
+      last_origin?: string;
+    };
+    const credential: StoredMachineCredential = {
+      serial: raw.serial ?? "",
+      fingerprint: raw.fingerprint ?? "",
+      publicKey: raw.publicKey ?? raw.public_key ?? "",
+      token: raw.token ?? "",
+      lastOrigin: raw.lastOrigin ?? raw.last_origin,
+      state: raw.state,
+    };
+    if (
+      !credential.serial ||
+      !credential.fingerprint ||
+      !credential.publicKey ||
+      !credential.token
+    ) {
+      localStorage.removeItem(MACHINE_CREDENTIAL_KEY);
+      return undefined;
+    }
+    return credential;
+  } catch {
+    return undefined;
+  }
+};
 
-export async function requestPairing(
-  deviceName: string,
-): Promise<PairingRequest> {
-  const res = await fetch(`${base()}/api/v1/pair/request`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ device_name: deviceName }),
-  });
-  if (res.status === 429) {
-    throw new Error("Too many attempts. Wait a moment and try again.");
-  }
-  if (!res.ok) {
-    throw new Error("Could not reach the machine.");
-  }
-  return res.json();
-}
+export const storeCredential = (credential: StoredMachineCredential): void => {
+  clearLegacyArtifacts();
+  localStorage.setItem(MACHINE_CREDENTIAL_KEY, JSON.stringify(credential));
+};
 
-export async function verifyPairingCode(
-  pairingId: string,
-  code: string,
-): Promise<string> {
-  const res = await fetch(`${base()}/api/v1/pair/verify`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pairing_id: pairingId, code }),
-  });
-  if (res.status === 401) {
-    throw new Error("That code is wrong or expired.");
+export const clearCredential = (): void => {
+  try {
+    localStorage.removeItem(MACHINE_CREDENTIAL_KEY);
+  } finally {
+    clearLegacyArtifacts();
   }
-  if (!res.ok) {
-    throw new Error("Could not verify the code.");
-  }
-  const data = await res.json();
-  return data.token as string;
-}
+};
