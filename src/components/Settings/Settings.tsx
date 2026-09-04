@@ -10,7 +10,7 @@ import {
   ReadOnlyField,
   StringField,
 } from "./SettingFields";
-import { WATCHER_URL } from "../../api/api";
+import { verifiedMachineFetch } from "../../api/api";
 import type { Settings } from "@meticulous-home/espresso-api";
 import type { Profile } from "@meticulous-home/espresso-profile";
 interface SettingsProps {
@@ -38,7 +38,7 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
     setArchiveLoading(true);
     setArchiveError(null);
     try {
-      const response = await fetch(`${WATCHER_URL}/archive`);
+      const response = await verifiedMachineFetch("/health/archive");
       if (!response.ok) {
         throw new Error(`Archive request failed: ${response.statusText}`);
       }
@@ -54,7 +54,9 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
-      setArchiveError(e instanceof Error ? e.message : "Failed to download archive");
+      setArchiveError(
+        e instanceof Error ? e.message : "Failed to download archive",
+      );
     } finally {
       setArchiveLoading(false);
     }
