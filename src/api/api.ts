@@ -21,6 +21,8 @@ export const SERVER_URL =
     ? getDevURL() || window.location.origin
     : "http://localhost:8080";
 
+export const WATCHER_URL = new URL("/health/", SERVER_URL).toString();
+
 type VerifyResult =
   | "ok"
   | "no_identity"
