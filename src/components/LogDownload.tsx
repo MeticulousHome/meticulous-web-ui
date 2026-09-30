@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { WATCHER_URL } from "../api/api";
+import { verifiedMachineFetch, WATCHER_URL } from "../api/api";
 import { useDevice } from "../hooks/useDevice";
 import { BottomModal } from "./Settings/BottomModal";
 
@@ -138,7 +138,7 @@ export const LogDownload = ({ isOpen, onClose }: LogDownloadProps) => {
         filename = `machine-journal-${rangeStart}-to-${rangeEnd}.log`;
       }
 
-      const response = await fetch(url);
+      const response = await verifiedMachineFetch(url.toString());
       if (!response.ok) {
         throw new Error(
           (await response.text()) || `Request failed (${response.status})`,
