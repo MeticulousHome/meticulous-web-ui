@@ -54,7 +54,9 @@ export const MachineSettings = ({ isOpen, onClose }: SettingsProps) => {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
-      setArchiveError(e instanceof Error ? e.message : "Failed to download archive");
+      setArchiveError(
+        e instanceof Error ? e.message : "Failed to download archive",
+      );
     } finally {
       setArchiveLoading(false);
     }
