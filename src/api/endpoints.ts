@@ -1,11 +1,13 @@
-// Catalog of every HTTP endpoint of meticulous-backend (branch `beta`, commit
-// f403168, 2026-10-20), rendered by the API explorer page.
+// Catalog of the HTTP endpoints of meticulous-backend (branch `beta`, commit
+// f403168, 2026-10-20), rendered by the API explorer page. The reports,
+// serial/firmware and smoke-validation endpoints are left out on purpose.
 //
 // The backend listens on 127.0.0.1:8080 only; LAN clients reach it through the
 // machine's nginx on port 80 (and 443 with a self-signed certificate), which
 // proxies /api and /socket.io and sets X-Real-IP. Endpoints marked "Local only"
 // answer 403 to any request whose X-Real-IP is not a loopback address, so they
-// only work from the machine itself (Dial) or through an SSH tunnel.
+// only work from the machine itself (Dial) or through an SSH tunnel; the
+// explorer lists them but doesn't send them.
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -131,23 +133,12 @@ const EXAMPLE_PROFILE = {
   ],
 };
 
-const EXAMPLE_LOCAL_ID = "01929a3e-7b2c-7d4e-8f10-123456789abc";
-
 const PROFILE_ID_PARAM: EndpointParam = {
   name: "id",
   in: "path",
   required: true,
   type: "string",
   description: "Profile UUID (hex digits and dashes)",
-};
-
-const REPORT_LOCAL_ID_PARAM: EndpointParam = {
-  name: "localID",
-  in: "path",
-  required: true,
-  type: "string",
-  description:
-    "Report localID, a lowercase UUID from /reports/request or /reports/create",
 };
 
 const HISTORY_FILE_PATH_PARAM: EndpointParam = {
@@ -1266,243 +1257,5 @@ export const ENDPOINTS: Endpoint[] = [
     ],
     response: "json",
     notes: "Same handler as /notifications.",
-  },
-
-  // Reports
-  {
-    id: "reports-preflight-get",
-    group: "Reports",
-    method: "GET",
-    path: "/api/v1/reports/preflight",
-    summary: "Check whether a bug report can be collected and uploaded",
-    params: [
-      {
-        name: "probe",
-        in: "query",
-        type: "string",
-        description:
-          "https URL the machine should reach (HEAD request); repeatable, up to 4",
-      },
-    ],
-    response: "json",
-    notes:
-      "Answers {ok, blockers, machineID, disk, collectionInProgress, network}.",
-  },
-  {
-    id: "reports-create-post",
-    group: "Reports",
-    method: "POST",
-    path: "/api/v1/reports/create",
-    summary: "Collect a bug report draft (logs, status, debug shots)",
-    body: { kind: "json", example: { issueTime: 1761240000 } },
-    response: "json",
-    danger: "caution",
-    notes:
-      "Body is optional: either issueTime (epoch seconds, collects the window around it) or localID (a dispatched report), not both. Collection takes a while; answers {localID, machineID}. 409 while another collection runs, 507 with less than 200 MB free.",
-  },
-  {
-    id: "reports-request-post",
-    group: "Reports",
-    method: "POST",
-    path: "/api/v1/reports/request",
-    summary: "Get a new report localID for a mobile-app dispatch",
-    response: "json",
-    notes: "Must be sent with an empty body (400 otherwise). Stores nothing.",
-  },
-  {
-    id: "reports-dispatch-get",
-    group: "Reports",
-    method: "GET",
-    path: "/api/v1/reports/dispatch",
-    summary: "List dispatched reports still waiting for the Dial",
-    response: "json",
-    notes:
-      "Answers {content: [...]}, same payload as the 'upload_report' socket event.",
-  },
-  {
-    id: "reports-dispatch-post",
-    group: "Reports",
-    method: "POST",
-    path: "/api/v1/reports/dispatch",
-    summary: "Hand a report over to the Dial for collection and upload",
-    body: {
-      kind: "json",
-      example: {
-        localID: EXAMPLE_LOCAL_ID,
-        ticket: 1234,
-        issueTime: 1761240000,
-        description: "Shot stopped early",
-        name: "Jane Doe",
-        email: "jane@example.com",
-      },
-    },
-    response: "json",
-    danger: "caution",
-    notes:
-      "localID and ticket (integer) are required; issueTime, description, name, email are optional. Answers 202 and emits 'upload_report' to the Dial. 409 for a duplicate localID.",
-  },
-  {
-    id: "reports-list-get",
-    group: "Reports",
-    method: "GET",
-    path: "/api/v1/reports/list",
-    summary: "List bug reports, newest first",
-    params: [
-      {
-        name: "page",
-        in: "query",
-        required: true,
-        type: "number",
-        default: "0",
-      },
-      {
-        name: "size",
-        in: "query",
-        required: true,
-        type: "number",
-        default: "20",
-      },
-      {
-        name: "filter",
-        in: "query",
-        type: "string",
-        description:
-          "FIQL on report columns, e.g. status==draft or status==submitted;ticketNumber=gt=100 (, = or, ; = and, * wildcard)",
-      },
-    ],
-    response: "json",
-    notes: "Answers {content, size, page, hasMore}.",
-  },
-  {
-    id: "reports-draft-get",
-    group: "Reports",
-    method: "GET",
-    path: "/api/v1/reports/draft/{localID}",
-    summary: "Download a report as a tar.zst archive",
-    params: [REPORT_LOCAL_ID_PARAM],
-    response: "binary",
-    notes: "Served as <localID>.zstd. Works for drafts and finalized reports.",
-  },
-  {
-    id: "reports-draft-put",
-    group: "Reports",
-    method: "PUT",
-    path: "/api/v1/reports/draft/{localID}",
-    summary:
-      "Update a report draft's description, ticket or attached debug shots",
-    params: [REPORT_LOCAL_ID_PARAM],
-    body: {
-      kind: "json",
-      example: {
-        description: "Shot stopped early",
-        ticket: 1234,
-        attachments: {
-          debugFiles: { user: ["2026-10-23/08:15:02.shot.json.zst"] },
-        },
-      },
-    },
-    response: "json",
-    danger: "caution",
-    notes:
-      "Allowed keys: description, baseEventID, ticket, multimedia, attachments.debugFiles.user (other keys answer 403). Answers the updated report_info.",
-  },
-  {
-    id: "reports-draft-delete",
-    group: "Reports",
-    method: "DELETE",
-    path: "/api/v1/reports/draft/{localID}",
-    summary: "Delete a report and its files",
-    params: [REPORT_LOCAL_ID_PARAM],
-    response: "json",
-    danger: "destructive",
-    notes: "Must have no body. Answers 204.",
-  },
-  {
-    id: "reports-submit-post",
-    group: "Reports",
-    method: "POST",
-    path: "/api/v1/reports/submit",
-    summary: "Mark a report as submitted",
-    body: {
-      kind: "json",
-      example: {
-        localID: EXAMPLE_LOCAL_ID,
-        eventID: "sentry-event-id",
-        ticket: 1234,
-      },
-    },
-    response: "text",
-    danger: "caution",
-    notes:
-      "localID and eventID are required; submissionTime (epoch seconds) and ticket (integer or null) are optional. Answers 200 with an empty body.",
-  },
-
-  // Serial / firmware
-  {
-    id: "serial-form-get",
-    group: "Serial / firmware",
-    method: "GET",
-    path: "/api/v1/serial",
-    summary: "Get the HTML form for writing the machine's serial number",
-    response: "text",
-  },
-  {
-    id: "serial-post",
-    group: "Serial / firmware",
-    method: "POST",
-    path: "/api/v1/serial",
-    summary: "Write serial number, color, batch and build date to the ESP32",
-    body: {
-      kind: "text",
-      example: "color=black&serial=000123&batch_number=1&build_date=2026-10-23",
-    },
-    response: "text",
-    danger: "destructive",
-    notes:
-      "Form fields, not JSON: send with Content-Type application/x-www-form-urlencoded. Overwrites the machine identity in the ESP32 NVS. Answers HTML text.",
-  },
-  {
-    id: "scale-calibrate-get",
-    group: "Serial / firmware",
-    method: "GET",
-    path: "/api/v1/scaleCalibrate",
-    summary: "Start the load-cell master calibration",
-    response: "text",
-    danger: "caution",
-    notes:
-      "Factory procedure (same as the scale_master_calibration action): stops heater and motor, needs an Acaia load cell, do not unplug the scale. Answers 200 with an empty body.",
-  },
-  {
-    id: "firmware-update-post",
-    group: "Serial / firmware",
-    method: "POST",
-    path: "/api/v1/update/firmware",
-    summary: "Upload ESP32 firmware and flash it",
-    params: [
-      {
-        name: "chip",
-        in: "query",
-        required: true,
-        type: "string",
-        options: ["ESP32S3", "ESP32"],
-        default: "ESP32S3",
-      },
-    ],
-    body: { kind: "file", field: "file", accept: ".zip,.bin" },
-    response: "text",
-    danger: "destructive",
-    notes:
-      "A zip of the firmware folder, or one of firmware.bin, partitions.bin, bootloader.bin, boot_app0.bin. Flashing starts in the background after 'success'. Through nginx, files over 1 MB likely hit nginx's default body limit (413).",
-  },
-
-  // Smoke validation
-  {
-    id: "smoke-validation-get",
-    group: "Smoke validation",
-    method: "GET",
-    path: "/api/v1/smoke-validation",
-    summary: "Get the smoke validation status",
-    response: "json",
-    notes: LOCAL_ONLY,
   },
 ];

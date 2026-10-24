@@ -118,12 +118,20 @@ const EndpointList = ({
                           {endpoint.summary}
                         </span>
                       </span>
-                      {endpoint.danger === "destructive" && (
-                        <TriangleAlert
-                          size={14}
-                          className="mt-1 shrink-0 text-bad"
-                          aria-label="Destructive"
+                      {isLocalOnly(endpoint) ? (
+                        <Lock
+                          size={13}
+                          className="mt-1 shrink-0 text-ink-3"
+                          aria-label="Local only"
                         />
+                      ) : (
+                        endpoint.danger === "destructive" && (
+                          <TriangleAlert
+                            size={14}
+                            className="mt-1 shrink-0 text-bad"
+                            aria-label="Destructive"
+                          />
+                        )
                       )}
                     </button>
                   </li>
@@ -234,6 +242,9 @@ const ResponseView = ({ result }: { result: ApiResult }) => {
 
 const RequestPanel = ({ endpoint }: { endpoint: Endpoint }) => {
   const { machineUrl } = useMachine();
+  // nginx forwards the browser's address, so the backend's loopback check
+  // refuses these from any browser, including on the machine's own page.
+  const localOnly = isLocalOnly(endpoint);
   const [draft, setDraft] = useState<RequestDraft>(() =>
     initialDraft(endpoint),
   );
@@ -498,10 +509,19 @@ const RequestPanel = ({ endpoint }: { endpoint: Endpoint }) => {
         >
           {endpoint.method} {previewUrl}
         </code>
+        {localOnly && (
+          <p className="flex gap-2 rounded-lg bg-raised px-3 py-2.5 text-sm text-ink-2">
+            <Lock size={14} className="mt-0.5 shrink-0 text-ink-3" />
+            Only software running on the machine itself can call this endpoint.
+            The machine refuses it from a browser (403), also when it serves
+            this page, so it can’t be sent from here.
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant={endpoint.danger === "destructive" ? "danger" : "primary"}
             loading={sending}
+            disabled={localOnly}
             onClick={() =>
               endpoint.danger === "destructive" ? setConfirming(true) : send()
             }
@@ -553,8 +573,73 @@ const RequestPanel = ({ endpoint }: { endpoint: Endpoint }) => {
   );
 };
 
+const ACKNOWLEDGED_KEY = "meticulous:api-risks-acknowledged";
+
+// Asked once per browser session.
+const readAcknowledged = () => {
+  try {
+    return sessionStorage.getItem(ACKNOWLEDGED_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
+
+const RiskGate = ({ onAccept }: { onAccept: () => void }) => {
+  const [checked, setChecked] = useState(false);
+  return (
+    <div className="max-w-2xl rounded-2xl border border-line bg-surface p-6">
+      <div className="flex gap-3">
+        <TriangleAlert size={20} className="mt-0.5 shrink-0 text-warn" />
+        <div>
+          <h3 className="text-base text-ink">Use the API with care</h3>
+          <p className="mt-2 text-sm leading-relaxed text-ink-2">
+            These endpoints act on the machine directly, with none of the
+            safeguards of the Dial or the app. Depending on the endpoint, a
+            request can move the piston, turn on the heater, change settings,
+            delete profiles or shot history, or install software. Requests run
+            as soon as you send them.
+          </p>
+          <label className="mt-5 flex items-start gap-2.5 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(event) => setChecked(event.target.checked)}
+              className="mt-0.5 size-4 accent-[var(--accent)]"
+            />
+            I understand the risks of using the machine’s API directly.
+          </label>
+          <Button
+            variant="primary"
+            className="mt-5"
+            disabled={!checked}
+            onClick={onAccept}
+          >
+            Show the endpoints
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ApiExplorer = () => {
+  const [acknowledged, setAcknowledged] = useState(readAcknowledged);
   const [selected, setSelected] = useState<Endpoint | null>(readSelected);
+
+  if (!acknowledged) {
+    return (
+      <RiskGate
+        onAccept={() => {
+          setAcknowledged(true);
+          try {
+            sessionStorage.setItem(ACKNOWLEDGED_KEY, "true");
+          } catch {
+            // Asked again next time.
+          }
+        }}
+      />
+    );
+  }
 
   const select = (endpoint: Endpoint | null) => {
     setSelected(endpoint);

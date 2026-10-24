@@ -220,6 +220,72 @@ export const TextSetting = ({
   );
 };
 
+export const SelectSetting = ({
+  settingKey,
+  label,
+  description,
+  options,
+  disabled,
+}: {
+  settingKey: string;
+  label: string;
+  description?: React.ReactNode;
+  options: { value: string; label: string }[];
+  disabled?: boolean;
+}) => {
+  const { data } = useSettings();
+  const save = useSettingSaver();
+  const id = useId();
+  const value = data?.[settingKey];
+  const current = typeof value === "string" ? value : "";
+  // Keep a value the list doesn't know selectable.
+  const all =
+    current && !options.some((option) => option.value === current)
+      ? [...options, { value: current, label: current }]
+      : options;
+  return (
+    <SettingRow label={label} description={description} htmlFor={id}>
+      <select
+        id={id}
+        value={current}
+        disabled={disabled || value === undefined}
+        onChange={(event) => save({ [settingKey]: event.target.value }, label)}
+        className={`${inputClass} w-56 pr-8`}
+      >
+        {all.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </SettingRow>
+  );
+};
+
+// A value shown in a disabled field: visible, not editable from this page.
+export const LockedSetting = ({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: string;
+  description?: string;
+}) => {
+  const id = useId();
+  return (
+    <SettingRow label={label} description={description} htmlFor={id}>
+      <input
+        id={id}
+        value={value}
+        disabled
+        readOnly
+        className={`${inputClass} w-56 cursor-not-allowed`}
+      />
+    </SettingRow>
+  );
+};
+
 export const ReadOnlySetting = ({
   label,
   value,

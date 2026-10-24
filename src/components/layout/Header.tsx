@@ -7,6 +7,7 @@ import { useThemePreference, type ThemePreference } from "../../theme";
 import { IconButton } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { MachineAddressForm } from "../connection/MachineAddressForm";
+import { CAN_CHANGE_MACHINE } from "../../api/api";
 import { LogoMark } from "./LogoMark";
 
 const TABS: { id: Tab; label: string }[] = [
@@ -53,13 +54,14 @@ export const Header = ({ tab, onNavigate }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/85 backdrop-blur-md">
       <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_auto] items-center gap-x-4 px-4 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
-        <a
-          href="#/machine"
+        <button
+          type="button"
+          onClick={() => onNavigate("machine")}
           className="flex items-center gap-2.5 justify-self-start py-4 text-[22px] font-light tracking-[-0.01em] text-ink sm:text-2xl"
         >
           <LogoMark className="h-[17px] w-auto shrink-0 sm:h-[19px]" />
           Meticulous
-        </a>
+        </button>
 
         <nav
           aria-label="Sections"
@@ -91,7 +93,13 @@ export const Header = ({ tab, onNavigate }: HeaderProps) => {
         <div className="flex items-center justify-end gap-1 sm:gap-2">
           <button
             type="button"
-            onClick={() => setConnectionOpen(true)}
+            // Only the dev server can switch machines; on the machine the pill
+            // leads to its info in Settings.
+            onClick={() =>
+              CAN_CHANGE_MACHINE
+                ? setConnectionOpen(true)
+                : onNavigate("settings")
+            }
             title={`${info?.name ?? "Machine"} · ${machineUrl.replace(/^https?:\/\//, "")}`}
             className="flex min-w-0 items-center gap-2 rounded-full px-3 py-1.5 text-sm text-ink-2 transition-colors hover:bg-raised hover:text-ink"
           >
@@ -115,7 +123,7 @@ export const Header = ({ tab, onNavigate }: HeaderProps) => {
       </div>
 
       <Dialog
-        open={connectionOpen}
+        open={CAN_CHANGE_MACHINE && connectionOpen}
         onClose={() => setConnectionOpen(false)}
         title="Machine"
         description={

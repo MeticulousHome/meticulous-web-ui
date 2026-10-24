@@ -9,8 +9,11 @@ The machine's own web page, served by the machine at `http://<machine-ip>/`.
   from Xavi's "Log review" preset in ProfilePlotter), the raw readings with
   out-of-range flags, pause, time window and CSV export.
 - **Settings**: the machine's settings, profile order, log and archive
-  downloads, machine info, and an **API explorer** that runs any backend
-  endpoint with its parameters (`src/api/endpoints.ts`).
+  downloads, machine info, and an **API explorer** that runs backend
+  endpoints with their parameters (`src/api/endpoints.ts`).
+
+A production build always talks to the machine that serves it (the page's own
+origin). Picking another machine is a development-only feature.
 
 ## Development
 
@@ -31,7 +34,7 @@ Settings → Machine); the choice is remembered in the browser. A
 
 The machine's API and socket allow any origin, so no proxy is needed. A few
 endpoints only answer callers on the machine itself; the API explorer marks
-them "Local only".
+them "Local only" and doesn't send them.
 
 ## Checks
 

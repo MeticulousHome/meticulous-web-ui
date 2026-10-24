@@ -1,12 +1,14 @@
 import Api from "@meticulous-home/espresso-api";
 
-// Which machine the UI talks to. On the machine itself this is the page's own
-// origin. For development, or to point the UI at another machine, it can be
-// set (in order of precedence) by:
+// Which machine the UI talks to. A production build is served by the machine
+// and always talks to it: the page's own origin. Only the dev server lets you
+// pick another machine, in order of precedence:
 //   1. a ?machine=<ip or url> query parameter (saved, then removed from the URL)
 //   2. the address saved from the connection dialog
 //   3. SERVER_URL / VITE_SERVER_URL when the dev server was started
 //   4. the page's own origin
+export const CAN_CHANGE_MACHINE = import.meta.env.DEV;
+
 const STORAGE_KEY = "meticulous:machine-url";
 
 // "10.10.0.42", "10.10.0.42:8080" or "http://10.10.0.42/" -> "http://10.10.0.42"
@@ -41,10 +43,12 @@ const writeStored = (url: string | null) => {
 };
 
 export const defaultMachineUrl = () =>
-  normalizeMachineUrl(import.meta.env.VITE_SERVER_URL ?? "") ??
+  (CAN_CHANGE_MACHINE &&
+    normalizeMachineUrl(import.meta.env.VITE_SERVER_URL ?? "")) ||
   window.location.origin;
 
 export const initialMachineUrl = (): string => {
+  if (!CAN_CHANGE_MACHINE) return window.location.origin;
   const params = new URLSearchParams(window.location.search);
   const fromQuery = normalizeMachineUrl(params.get("machine") ?? "");
   if (fromQuery) {
@@ -63,6 +67,7 @@ export const initialMachineUrl = (): string => {
 
 // Saves an explicit address, or clears it (null) to go back to the default.
 export const saveMachineUrl = (url: string | null) => {
+  if (!CAN_CHANGE_MACHINE) return window.location.origin;
   writeStored(url);
   return url ?? defaultMachineUrl();
 };
