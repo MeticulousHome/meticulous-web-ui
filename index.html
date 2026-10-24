@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/logo-white.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Meticulous</title>
+    <script>
+      // Apply the saved theme before the first paint (see src/theme.ts).
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem("meticulous:theme");
+        } catch (e) {}
+        var dark =
+          stored === "dark" ||
+          (stored === "system" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
