@@ -105,7 +105,6 @@ export class SeriesBuffer {
 export interface ShotPoint {
   time: number; // seconds into the shot
   pressure: number;
-  flow: number;
   weight: number;
   gravimetric_flow: number;
 }
@@ -160,7 +159,6 @@ export class LiveStore {
       this.liveShot.push({
         time: status.time / 1000,
         pressure: status.sensors.p,
-        flow: status.sensors.f,
         weight: status.sensors.w,
         gravimetric_flow: status.sensors.g,
       });
