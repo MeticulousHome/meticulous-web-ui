@@ -1,20 +1,12 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* Fonts */
-@font-face {
-  font-family: "Lato";
-  src: url("./assets/fonts/Lato-Regular.ttf");
-}
-
-@font-face {
-  font-family: "Satoshi";
-  src: url("./assets/fonts/Satoshi-Regular.ttf");
-}
-
 @font-face {
   font-family: "ABC Diatype";
   src: url("./assets/fonts/abc-diatype-regular.otf");
-  font-weight: normal;
+  font-weight: 400;
 }
 
 @font-face {
@@ -32,7 +24,7 @@
 @font-face {
   font-family: "ABC Diatype Mono";
   src: url("./assets/fonts/abc-diatype-mono-regular-trial.otf");
-  font-weight: normal;
+  font-weight: 400;
 }
 
 @font-face {
@@ -41,17 +33,168 @@
   font-weight: 300;
 }
 
-@font-face {
-  font-family: "ABC Diatype Mono";
-  src: url("./assets/fonts/abc-diatype-mono-thin-trial.otf");
-  font-weight: 200;
+/* Design tokens. Light is the default; [data-theme="dark"] is set on <html>
+   by the theme preference (see src/theme.ts and the inline script in
+   index.html). Chart series colors are the validated categorical palette,
+   stepped separately for each surface. */
+:root {
+  color-scheme: light;
+  --canvas: #efefed;
+  --surface: #f7f7f5;
+  --raised: #e4e4e1;
+  --raised-hover: #dbdbd7;
+  --line: #d9d9d5;
+  --line-strong: #c4c4bf;
+  --ink: #171717;
+  --ink-2: #5e5e5b;
+  --ink-3: #8f8f8a;
+  --accent: #232323;
+  --accent-hover: #000000;
+  --on-accent: #fafaf8;
+  --good: #0ca30c;
+  --warn: #c98500;
+  --bad: #d03b3b;
+  --chart-surface: #fcfcfb;
+  --chart-grid: #e6e6e2;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+  --s5: #e87ba4;
+  --s6: #008300;
+  --s7: #6250d6;
+  --s8: #e34948;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #141414;
+  --surface: #1c1c1b;
+  --raised: #252524;
+  --raised-hover: #2e2e2c;
+  --line: #2c2c2a;
+  --line-strong: #3d3d3a;
+  --ink: #f0efec;
+  --ink-2: #b5b4ae;
+  --ink-3: #85847e;
+  --accent: #f0efec;
+  --accent-hover: #ffffff;
+  --on-accent: #141414;
+  --chart-surface: #1a1a19;
+  --chart-grid: #2a2a28;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --s4: #c98500;
+  --s5: #d55181;
+  --s6: #008300;
+  --s7: #9085e9;
+  --s8: #e66767;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-raised-hover: var(--raised-hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --font-sans: "ABC Diatype", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "ABC Diatype Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
-  width: 100%;
-  height: 100%;
-  font-family: "ABC Diatype";
-  color: white;
-  background-color: rgb(39, 39, 39);
-  padding: 20px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  color: var(--ink);
+  background-color: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--s1);
+  outline-offset: 2px;
+}
+
+/* Horizontal scrollers (profile strip) hide their scrollbar but keep
+   scrolling by touch, wheel and keyboard. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.18s ease-out both;
+}
+
+.animate-rise-in {
+  animation: rise-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-rise-in,
+  .animate-slide-in-right {
+    animation: none;
+  }
 }
