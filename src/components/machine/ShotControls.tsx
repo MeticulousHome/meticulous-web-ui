@@ -5,6 +5,7 @@ import {
   useMachineAction,
   type MachineAction,
 } from "../../hooks/useMachineData";
+import { ProfileArt } from "../profiles/ProfileCard";
 import { useOrderedProfiles } from "../profiles/useOrderedProfiles";
 import { useProfileSelection } from "../profiles/ProfileSelection";
 import { useToast } from "../ui/Toast";
@@ -131,21 +132,22 @@ export const ShotControls = ({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+    // minmax(0, 1fr): a long name truncates instead of widening its column.
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <button
         type="button"
         onClick={onPickProfile}
-        className="flex h-[74px] items-center justify-between gap-3 rounded-xl border border-line bg-surface px-5 text-left transition-colors hover:border-line-strong"
+        className="flex h-[74px] min-w-0 items-center gap-3 rounded-xl border border-line bg-surface pr-4 pl-3 text-left transition-colors hover:border-line-strong"
       >
-        <span className="min-w-0">
+        <span className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-raised">
+          {/* Keyed so a failed image doesn't carry over to the next profile. */}
+          {selected && <ProfileArt key={selected.id} profile={selected} />}
+        </span>
+        <span className="min-w-0 flex-1">
           <span className="block truncate text-xs text-ink-2">
-            {selected && loaded && selected.id !== loaded.id ? (
-              <>
-                Selected <span className="text-ink-3">· not loaded yet</span>
-              </>
-            ) : (
-              "Selected profile"
-            )}
+            {selected && loaded && selected.id !== loaded.id
+              ? "Not loaded yet"
+              : "Selected profile"}
           </span>
           <span className="mt-1 block truncate text-xl leading-tight text-ink">
             {selectedName ?? "None"}

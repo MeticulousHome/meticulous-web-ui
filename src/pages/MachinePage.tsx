@@ -66,7 +66,8 @@ export const MachinePage = () => {
         <div className="hidden sm:block">
           <MachineRender />
         </div>
-        <div className="flex flex-col gap-6 lg:max-w-[560px] lg:justify-self-end xl:max-w-[600px]">
+        {/* A fixed width: long profile names truncate instead of widening it. */}
+        <div className="flex min-w-0 flex-col gap-6 lg:w-full lg:max-w-[560px] lg:justify-self-end xl:max-w-[600px]">
           <StatusTiles />
           <ActionGrid />
           <div className="h-px bg-line" />

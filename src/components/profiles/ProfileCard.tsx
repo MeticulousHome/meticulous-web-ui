@@ -24,7 +24,7 @@ const downloadProfile = (profile: Profile) =>
 
 // Artwork, or a soft gradient in the profile's accent color when it has none
 // (or the image fails to load).
-const ProfileArt = ({ profile }: { profile: Profile }) => {
+export const ProfileArt = ({ profile }: { profile: Profile }) => {
   const { machineUrl } = useMachine();
   const [failed, setFailed] = useState(false);
   const src = profileImageUrl(machineUrl, profile.display?.image);

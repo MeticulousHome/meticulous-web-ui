@@ -216,21 +216,31 @@ export const ShotChart = () => {
   return (
     <section aria-label="Shot chart" className="flex flex-col">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <div className="min-w-0 text-sm">
-          <span className="text-ink">
+        {/* One line: a long profile name truncates, time and weight stay. */}
+        <div className="flex min-w-[10rem] flex-1 items-baseline gap-1 text-sm whitespace-nowrap">
+          <span className="shrink-0 text-ink">
             {extracting ? "Live shot" : showLive ? "This shot" : "Last shot"}
           </span>
           {points.length > 0 && (
-            <span className="text-ink-3">
-              {profileName ? ` · ${profileName}` : ""} · {formatValue(duration)}{" "}
-              s
-              {finalWeight !== undefined
-                ? ` · ${formatValue(finalWeight)} g`
-                : ""}
-            </span>
+            <>
+              {profileName && (
+                <span className="min-w-0 truncate text-ink-3">
+                  · {profileName}
+                </span>
+              )}
+              <span className="shrink-0 text-ink-3">
+                · {formatValue(duration)} s
+                {finalWeight !== undefined
+                  ? ` · ${formatValue(finalWeight)} g`
+                  : ""}
+              </span>
+            </>
           )}
         </div>
-        <ul className="-mr-1.5 flex flex-wrap" aria-label="Chart series">
+        <ul
+          className="-mr-1.5 flex shrink-0 flex-wrap"
+          aria-label="Chart series"
+        >
           {SERIES.map((series) => {
             const on = !hidden.includes(series.key);
             return (
