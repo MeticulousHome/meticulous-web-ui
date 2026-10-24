@@ -1,26 +1,52 @@
 import { useRef } from "react";
-import { useProfileActions } from "./useProfileActions";
+import type { Profile } from "@meticulous-home/espresso-profile";
+import { useSaveProfile } from "../../hooks/useMachineData";
+import { useToast } from "../ui/Toast";
 
-// A hidden file input behind any trigger element.
+// A hidden file input behind any trigger element: saves the profile in the
+// chosen .json file to the machine.
 export const ProfileImportButton = ({
   children,
   className,
   label = "Import a profile from a JSON file",
+  ...props
 }: {
   children: React.ReactNode;
   className?: string;
   label?: string;
-}) => {
+} & React.HTMLAttributes<HTMLButtonElement>) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { importFile, importing } = useProfileActions();
+  const save = useSaveProfile();
+  const notify = useToast();
+
+  const importFile = async (file: File) => {
+    let profile: Profile;
+    try {
+      profile = JSON.parse(await file.text()) as Profile;
+      if (!profile || typeof profile !== "object" || !profile.name) {
+        throw new Error("missing name");
+      }
+    } catch {
+      notify(`${file.name} isn't a profile JSON file.`, "error");
+      return;
+    }
+    save.mutate(profile, {
+      onSuccess: () =>
+        notify(`${profile.name} saved to the machine`, "success"),
+      onError: (error) =>
+        notify(`Couldn't save ${profile.name}: ${error.message}`, "error"),
+    });
+  };
+
   return (
     <>
       <button
         type="button"
         title={label}
-        disabled={importing}
+        disabled={save.isPending}
         onClick={() => inputRef.current?.click()}
         className={className}
+        {...props}
       >
         {children}
       </button>

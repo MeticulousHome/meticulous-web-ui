@@ -1,29 +1,33 @@
 import { useEffect, useRef } from "react";
 import { ChevronRight, Plus } from "lucide-react";
+import { useDragScroll } from "../../hooks/useDragScroll";
 import { ProfileCard } from "./ProfileCard";
 import { ProfileImportButton } from "./ProfileImportButton";
 import { useOrderedProfiles } from "./useOrderedProfiles";
-import { useProfileActions } from "./useProfileActions";
+import { useProfileSelection } from "./ProfileSelection";
 
 const CARD_WIDTH = "w-[184px] sm:w-[200px]";
+const ITEM_SELECTOR = "[data-strip-item]";
 
 export const ProfileStrip = ({ onViewAll }: { onViewAll: () => void }) => {
-  const { profiles, selected, isLoading, error } = useOrderedProfiles();
-  const { load, canLoad } = useProfileActions();
+  const { profiles, selected, loaded, isLoading, error } = useOrderedProfiles();
+  const { choose } = useProfileSelection();
   const stripRef = useRef<HTMLDivElement>(null);
   const hasProfiles = profiles.length > 0;
+  useDragScroll(stripRef, ITEM_SELECTOR, !error);
 
-  // Bring the loaded profile to the front of the strip when it changes.
+  // Bring the profile loaded on the machine to the front when it changes
+  // (not on a click here, which would move the card away from the pointer).
   useEffect(() => {
     const strip = stripRef.current;
-    if (!strip || !selected || !hasProfiles) return;
+    if (!strip || !loaded || !hasProfiles) return;
     const card = strip.querySelector<HTMLElement>(
-      `[data-profile-id="${CSS.escape(selected.id)}"]`,
+      `[data-profile-id="${CSS.escape(loaded.id)}"]`,
     );
     if (!card) return;
     const padding = Number.parseFloat(getComputedStyle(strip).paddingLeft);
     strip.scrollTo({ left: card.offsetLeft - padding, behavior: "smooth" });
-  }, [selected, hasProfiles]);
+  }, [loaded, hasProfiles]);
 
   return (
     <section aria-labelledby="profiles-heading">
@@ -51,7 +55,7 @@ export const ProfileStrip = ({ onViewAll }: { onViewAll: () => void }) => {
       ) : (
         <div
           ref={stripRef}
-          className="no-scrollbar relative -mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pt-1 pb-3 sm:-mx-8 sm:scroll-px-8 sm:px-8"
+          className="no-scrollbar relative -mx-4 flex cursor-grab snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pt-1 pb-3 select-none data-[dragging=true]:cursor-grabbing sm:-mx-8 sm:scroll-px-8 sm:px-8 [&[data-dragging=true]_*]:cursor-grabbing"
         >
           {isLoading
             ? Array.from({ length: 5 }, (_, index) => (
@@ -68,14 +72,15 @@ export const ProfileStrip = ({ onViewAll }: { onViewAll: () => void }) => {
                   key={profile.id}
                   profile={profile}
                   selected={profile.id === selected?.id}
-                  disabled={!canLoad}
-                  onLoad={load}
+                  loaded={profile.id === loaded?.id}
+                  onSelect={(choice) => choose(choice.id)}
                   className={`${CARD_WIDTH} shrink-0 snap-start`}
                 />
               ))}
           <ProfileImportButton
             className={`${CARD_WIDTH} flex min-h-[176px] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line-strong text-ink-2 transition-colors hover:bg-surface hover:text-ink`}
             label="Add a profile from a JSON file"
+            data-strip-item
           >
             <Plus size={22} strokeWidth={1.5} />
             <span className="text-[15px]">New profile</span>

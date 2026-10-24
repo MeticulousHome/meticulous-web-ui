@@ -15,6 +15,21 @@ const WINDOWS = [
   { value: "900000", label: "15 min" },
 ];
 
+const WINDOW_KEY = "meticulous:sensors-window";
+
+// The last window picked, kept across tabs and visits.
+const readWindow = () => {
+  try {
+    const stored = localStorage.getItem(WINDOW_KEY);
+    if (stored && WINDOWS.some((option) => option.value === stored)) {
+      return stored;
+    }
+  } catch {
+    // Default below.
+  }
+  return "60000";
+};
+
 const exportCsv = (live: ReturnType<typeof useMachine>["live"]) => {
   const statusKeys = live.statusBuffer.keys();
   const sensorKeys = live.sensorBuffer.keys();
@@ -54,7 +69,7 @@ const exportCsv = (live: ReturnType<typeof useMachine>["live"]) => {
 
 const SensorsPage = () => {
   const { live, connection } = useMachine();
-  const [windowMs, setWindowMs] = useState("60000");
+  const [windowMs, setWindowMs] = useState(readWindow);
   const [paused, setPaused] = useState(false);
 
   return (
@@ -71,7 +86,14 @@ const SensorsPage = () => {
           <Segmented
             label="Time window"
             value={windowMs}
-            onChange={setWindowMs}
+            onChange={(value) => {
+              setWindowMs(value);
+              try {
+                localStorage.setItem(WINDOW_KEY, value);
+              } catch {
+                // Not remembered; still applies now.
+              }
+            }}
             options={WINDOWS}
           />
           <Button

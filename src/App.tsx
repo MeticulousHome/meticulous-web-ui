@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MachineProvider } from "./contexts/MachineProvider";
+import { ProfileSelectionProvider } from "./components/profiles/ProfileSelection";
 import { ThemeProvider } from "./theme";
 import { ToastProvider } from "./components/ui/Toast";
 import { Header } from "./components/layout/Header";
@@ -58,7 +59,9 @@ function App() {
       <ThemeProvider>
         <ToastProvider>
           <MachineProvider>
-            <Shell />
+            <ProfileSelectionProvider>
+              <Shell />
+            </ProfileSelectionProvider>
           </MachineProvider>
         </ToastProvider>
       </ThemeProvider>

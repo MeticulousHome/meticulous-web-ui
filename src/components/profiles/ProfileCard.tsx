@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Profile } from "@meticulous-home/espresso-profile";
-import { Download, Ellipsis, Play } from "lucide-react";
+import { Download, Ellipsis } from "lucide-react";
 import { profileImageUrl } from "../../api/api";
 import { useMachine } from "../../contexts/MachineProvider";
 import { saveJson } from "../../lib/download";
@@ -8,9 +8,11 @@ import { Menu } from "../ui/Menu";
 
 interface ProfileCardProps {
   profile: Profile;
+  // Picked on this page (or loaded, when nothing is picked).
   selected?: boolean;
-  disabled?: boolean;
-  onLoad: (profile: Profile) => void;
+  // Loaded on the machine right now.
+  loaded?: boolean;
+  onSelect: (profile: Profile) => void;
   className?: string;
 }
 
@@ -52,12 +54,13 @@ const ProfileArt = ({ profile }: { profile: Profile }) => {
 export const ProfileCard = ({
   profile,
   selected,
-  disabled,
-  onLoad,
+  loaded,
+  onSelect,
   className = "",
 }: ProfileCardProps) => (
   <div
     data-profile-id={profile.id}
+    data-strip-item
     className={`group relative flex flex-col rounded-xl bg-surface p-2 transition-shadow ${
       selected
         ? "ring-[1.5px] ring-ink"
@@ -66,15 +69,19 @@ export const ProfileCard = ({
   >
     <button
       type="button"
-      disabled={disabled}
-      onClick={() => onLoad(profile)}
-      aria-label={
-        selected ? `${profile.name} (loaded)` : `Load ${profile.name}`
-      }
-      className="flex flex-col text-left disabled:cursor-default"
+      onClick={() => onSelect(profile)}
+      aria-pressed={!!selected}
+      aria-label={`${profile.name}${loaded ? " (on the machine)" : ""}`}
+      className="flex flex-col text-left"
     >
-      <div className="aspect-[16/10] w-full overflow-hidden rounded-lg bg-raised">
+      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-raised">
         <ProfileArt profile={profile} />
+        {loaded && !selected && (
+          <span className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] text-ink-2 backdrop-blur-sm">
+            <span className="size-1.5 rounded-full bg-good" />
+            On machine
+          </span>
+        )}
       </div>
       <div className="flex min-h-11 items-center pr-7 pl-1.5">
         <span className="truncate text-[15px] text-ink">{profile.name}</span>
@@ -90,12 +97,6 @@ export const ProfileCard = ({
             : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
         }`}
         items={[
-          {
-            label: selected ? "Loaded on the machine" : "Load on the machine",
-            icon: <Play size={14} />,
-            disabled: selected || disabled,
-            onSelect: () => onLoad(profile),
-          },
           {
             label: "Download JSON",
             icon: <Download size={14} />,

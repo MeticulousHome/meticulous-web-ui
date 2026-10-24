@@ -7,6 +7,7 @@ import { useThemePreference, type ThemePreference } from "../../theme";
 import { IconButton } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { MachineAddressForm } from "../connection/MachineAddressForm";
+import { LogoMark } from "./LogoMark";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "machine", label: "Machine" },
@@ -54,8 +55,9 @@ export const Header = ({ tab, onNavigate }: HeaderProps) => {
       <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_auto] items-center gap-x-4 px-4 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
         <a
           href="#/machine"
-          className="py-4 text-[22px] font-light tracking-[-0.01em] text-ink sm:text-2xl"
+          className="flex items-center gap-2.5 justify-self-start py-4 text-[22px] font-light tracking-[-0.01em] text-ink sm:text-2xl"
         >
+          <LogoMark className="h-[17px] w-auto shrink-0 sm:h-[19px]" />
           Meticulous
         </a>
 

@@ -5,7 +5,7 @@ import { Spinner } from "../ui/Spinner";
 import { ProfileCard } from "./ProfileCard";
 import { ProfileImportButton } from "./ProfileImportButton";
 import { useOrderedProfiles } from "./useOrderedProfiles";
-import { useProfileActions } from "./useProfileActions";
+import { useProfileSelection } from "./ProfileSelection";
 
 export const ProfilePicker = ({
   open,
@@ -14,8 +14,8 @@ export const ProfilePicker = ({
   open: boolean;
   onClose: () => void;
 }) => {
-  const { profiles, selected, isLoading, error } = useOrderedProfiles();
-  const { load, canLoad } = useProfileActions();
+  const { profiles, selected, loaded, isLoading, error } = useOrderedProfiles();
+  const { choose } = useProfileSelection();
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -34,11 +34,7 @@ export const ProfilePicker = ({
       onClose={onClose}
       size="xl"
       title="Profiles"
-      description={
-        canLoad
-          ? `${profiles.length} on this machine. Pick one to load it.`
-          : "Profiles can be loaded while the machine is idle."
-      }
+      description={`${profiles.length} on this machine. Pick one, then run it with Start shot.`}
       footer={
         <ProfileImportButton className="inline-flex h-10 items-center gap-2 rounded-lg bg-raised px-4 text-sm text-ink hover:bg-raised-hover">
           <Upload size={16} />
@@ -74,9 +70,9 @@ export const ProfilePicker = ({
               key={profile.id}
               profile={profile}
               selected={profile.id === selected?.id}
-              disabled={!canLoad}
-              onLoad={(choice) => {
-                load(choice);
+              loaded={profile.id === loaded?.id}
+              onSelect={(choice) => {
+                choose(choice.id);
                 onClose();
               }}
             />

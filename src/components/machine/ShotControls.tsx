@@ -1,10 +1,12 @@
 import { ChevronRight, Play, Square, X } from "lucide-react";
 import { useMachine, useStatusField } from "../../contexts/MachineProvider";
 import {
+  useLoadProfile,
   useMachineAction,
   type MachineAction,
 } from "../../hooks/useMachineData";
 import { useOrderedProfiles } from "../profiles/useOrderedProfiles";
+import { useProfileSelection } from "../profiles/ProfileSelection";
 import { useToast } from "../ui/Toast";
 import { Spinner } from "../ui/Spinner";
 
@@ -24,26 +26,46 @@ export const ShotControls = ({
   const stage = useStatusField((status) => status?.name);
   const extracting = useStatusField((status) => !!status?.extracting);
   const { connection } = useMachine();
-  const { selectedName } = useOrderedProfiles();
+  const { selected, loaded, selectedName } = useOrderedProfiles();
+  const { choose } = useProfileSelection();
   const action = useMachineAction();
+  const loadProfile = useLoadProfile();
   const notify = useToast();
 
   const online = connection === "connected";
   const idle = state === "idle";
   const waiting = !idle && isWaitingForClick(stage);
-  const pending = action.isPending ? action.variables : undefined;
+  const pending = loadProfile.isPending
+    ? "start"
+    : action.isPending
+      ? action.variables
+      : undefined;
 
   const run = (name: MachineAction, verb: string) =>
     action.mutate(name, {
       onError: (error) => notify(`Couldn't ${verb}: ${error.message}`, "error"),
     });
 
+  // Loading sends the selected profile to the machine, which starts it: it
+  // heats and, unless auto start is on, waits at "click to start".
+  const startShot = () => {
+    if (!selected) {
+      run("start", "start the shot");
+      return;
+    }
+    loadProfile.mutate(selected.id, {
+      onSuccess: () => choose(null),
+      onError: (error) =>
+        notify(`Couldn't start ${selected.name}: ${error.message}`, "error"),
+    });
+  };
+
   let primary: React.ReactNode;
   if (!online || idle || !state) {
     primary = (
       <button
         type="button"
-        onClick={() => run("start", "start the shot")}
+        onClick={startShot}
         disabled={!online || !state || !!pending}
         className={`${bigButton} bg-accent text-on-accent hover:bg-accent-hover`}
       >
@@ -116,7 +138,15 @@ export const ShotControls = ({
         className="flex h-[74px] items-center justify-between gap-3 rounded-xl border border-line bg-surface px-5 text-left transition-colors hover:border-line-strong"
       >
         <span className="min-w-0">
-          <span className="block text-xs text-ink-2">Selected profile</span>
+          <span className="block truncate text-xs text-ink-2">
+            {selected && loaded && selected.id !== loaded.id ? (
+              <>
+                Selected <span className="text-ink-3">· not loaded yet</span>
+              </>
+            ) : (
+              "Selected profile"
+            )}
+          </span>
           <span className="mt-1 block truncate text-xl leading-tight text-ink">
             {selectedName ?? "None"}
           </span>
