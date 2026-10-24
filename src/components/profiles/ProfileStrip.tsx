@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { ChevronRight, Plus } from "lucide-react";
+import { useMachine } from "../../contexts/MachineProvider";
 import { useDragScroll } from "../../hooks/useDragScroll";
 import { ProfileCard } from "./ProfileCard";
 import { ProfileImportButton } from "./ProfileImportButton";
@@ -9,25 +10,54 @@ import { useProfileSelection } from "./ProfileSelection";
 const CARD_WIDTH = "w-[184px] sm:w-[200px]";
 const ITEM_SELECTOR = "[data-strip-item]";
 
+// Where the strip was scrolled, kept while the Machine tab is unmounted so
+// switching tabs brings it back as it was (a reload starts over).
+const memory: {
+  machineUrl?: string;
+  left?: number;
+  loadedId?: string;
+} = {};
+
 export const ProfileStrip = ({ onViewAll }: { onViewAll: () => void }) => {
+  const { machineUrl } = useMachine();
   const { profiles, selected, loaded, isLoading, error } = useOrderedProfiles();
   const { choose } = useProfileSelection();
   const stripRef = useRef<HTMLDivElement>(null);
   const hasProfiles = profiles.length > 0;
+  const loadedId = loaded?.id;
   useDragScroll(stripRef, ITEM_SELECTOR, !error);
 
-  // Bring the profile loaded on the machine to the front when it changes
-  // (not on a click here, which would move the card away from the pointer).
-  useEffect(() => {
+  // Save the position as the tab unmounts. A layout cleanup still runs with
+  // the strip attached, so scrollLeft is real (a passive cleanup reads 0).
+  useLayoutEffect(() => {
     const strip = stripRef.current;
-    if (!strip || !loaded || !hasProfiles) return;
-    const card = strip.querySelector<HTMLElement>(
-      `[data-profile-id="${CSS.escape(loaded.id)}"]`,
-    );
-    if (!card) return;
-    const padding = Number.parseFloat(getComputedStyle(strip).paddingLeft);
-    strip.scrollTo({ left: card.offsetLeft - padding, behavior: "smooth" });
-  }, [loaded, hasProfiles]);
+    return () => {
+      if (strip && memory.machineUrl === machineUrl) {
+        memory.left = strip.scrollLeft;
+      }
+    };
+  }, [machineUrl]);
+
+  // Before paint: put the strip back where it was. Bring the loaded profile
+  // to the front only the first time, or when the machine loads another one
+  // (never on a click here, which would move the card away from the pointer).
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (!strip || !hasProfiles) return;
+    const sameMachine = memory.machineUrl === machineUrl;
+    memory.machineUrl = machineUrl;
+    if (loadedId && (!sameMachine || memory.loadedId !== loadedId)) {
+      memory.loadedId = loadedId;
+      const card = strip.querySelector<HTMLElement>(
+        `[data-profile-id="${CSS.escape(loadedId)}"]`,
+      );
+      if (!card) return;
+      const padding = Number.parseFloat(getComputedStyle(strip).paddingLeft);
+      strip.scrollTo({ left: card.offsetLeft - padding, behavior: "smooth" });
+    } else if (sameMachine && memory.left !== undefined) {
+      strip.scrollLeft = memory.left;
+    }
+  }, [loadedId, hasProfiles, machineUrl]);
 
   return (
     <section aria-labelledby="profiles-heading">
