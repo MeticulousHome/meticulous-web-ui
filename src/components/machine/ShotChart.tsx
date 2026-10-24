@@ -42,6 +42,8 @@ const SERIES: {
 const LEFT_FLOOR = 12; // bar, g/s
 const LEFT_STEP = 4;
 const RIGHT_FLOOR = 40; // g
+// Time axis length before any shot exists, in seconds.
+const EMPTY_X_MAX = 30;
 
 // Rounds outward to one significant digit: -247.3 -> -300, 52 -> 60.
 const niceBound = (value: number, direction: "down" | "up") => {
@@ -88,7 +90,11 @@ export const ShotChart = () => {
     if (!chart) return;
     const colors = chartColors();
     const axis = axisStyle(colors);
-    const xMax = Math.max(60, Math.ceil(duration / 10) * 10);
+    // The time axis ends where the shot ends, rounded up to the next 5 s;
+    // a live shot widens it as it runs.
+    const xMax = points.length
+      ? Math.max(10, Math.ceil(duration / 5) * 5)
+      : EMPTY_X_MAX;
     const visible = SERIES.filter((series) => !hidden.includes(series.key));
     const yAxis = (
       floor: number,
@@ -131,7 +137,7 @@ export const ShotChart = () => {
           type: "value",
           min: 0,
           max: xMax,
-          interval: 10,
+          interval: xMax <= 20 ? 5 : 10,
           ...axis,
           splitLine: { show: false },
           axisLabel: {
