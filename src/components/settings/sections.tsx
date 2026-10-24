@@ -8,12 +8,12 @@ import { Switch } from "../ui/Switch";
 import {
   NumberSetting,
   ReadOnlySetting,
-  SelectSetting,
   SettingRow,
   SettingsCard,
   TextSetting,
   ToggleSetting,
 } from "./fields";
+import { UpdateChannelSetting } from "./UpdateChannelSetting";
 import { useSettingSaver } from "./useSettingSaver";
 
 export const MachineSection = () => {
@@ -200,16 +200,7 @@ export const SystemSection = () => {
         suffix="days"
         min={0}
       />
-      <SelectSetting
-        settingKey="update_channel"
-        label="Update channel"
-        description="Which software releases the machine installs."
-        options={[
-          { value: "stable", label: "Stable" },
-          { value: "beta", label: "Beta" },
-          { value: "nightly", label: "Nightly" },
-        ]}
-      />
+      <UpdateChannelSetting />
       <ReadOnlySetting label="Timezone detection" value={data?.timezone_sync} />
       <ReadOnlySetting label="Timezone" value={data?.time_zone} />
       <ToggleSetting

@@ -220,46 +220,6 @@ export const TextSetting = ({
   );
 };
 
-export const SelectSetting = ({
-  settingKey,
-  label,
-  description,
-  options,
-}: {
-  settingKey: string;
-  label: string;
-  description?: string;
-  options: { value: string; label: string }[];
-}) => {
-  const { data } = useSettings();
-  const save = useSettingSaver();
-  const id = useId();
-  const value = data?.[settingKey];
-  const current = typeof value === "string" ? value : "";
-  // Keep a value the list doesn't know selectable.
-  const all =
-    current && !options.some((option) => option.value === current)
-      ? [...options, { value: current, label: current }]
-      : options;
-  return (
-    <SettingRow label={label} description={description} htmlFor={id}>
-      <select
-        id={id}
-        value={current}
-        disabled={value === undefined}
-        onChange={(event) => save({ [settingKey]: event.target.value }, label)}
-        className={`${inputClass} w-44 pr-8`}
-      >
-        {all.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </SettingRow>
-  );
-};
-
 export const ReadOnlySetting = ({
   label,
   value,
