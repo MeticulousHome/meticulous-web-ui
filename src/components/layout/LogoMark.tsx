@@ -1,5 +1,5 @@
-// The Meticulous mark (same geometry as public/logo.svg), drawn in the
-// current text color so it follows the theme.
+// The Meticulous mark, drawn in the current text color so it follows the
+// theme. (public/logo.svg, the tab icon, is a pixel-aligned redraw of it.)
 export const LogoMark = ({ className = "" }: { className?: string }) => (
   <svg
     viewBox="0 0 33 25"
