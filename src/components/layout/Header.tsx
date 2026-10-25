@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { ExternalLink, Monitor, Moon, Sun } from "lucide-react";
 import { useMachine } from "../../contexts/MachineProvider";
 import { useDeviceInfo } from "../../hooks/useMachineData";
 import type { Tab } from "../../hooks/useRoute";
@@ -7,7 +7,7 @@ import { useThemePreference, type ThemePreference } from "../../theme";
 import { IconButton } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { MachineAddressForm } from "../connection/MachineAddressForm";
-import { CAN_CHANGE_MACHINE } from "../../api/api";
+import { CAN_CHANGE_MACHINE, plotterUrl } from "../../api/api";
 import { LogoMark } from "./LogoMark";
 
 const TABS: { id: Tab; label: string }[] = [
@@ -88,6 +88,20 @@ export const Header = ({ tab, onNavigate }: HeaderProps) => {
               </button>
             );
           })}
+          {/* Not a tab: the plotter is another app on the machine, so it
+              opens in a new browser tab and keeps this page live. */}
+          <a
+            href={plotterUrl(machineUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open the Profile Plotter in a new tab"
+            className="flex items-center gap-1 px-3 pt-1 pb-3 text-sm text-ink-2 transition-colors hover:text-ink md:py-5"
+          >
+            <span className="sm:hidden">Plotter</span>
+            <span className="hidden sm:inline">Profile Plotter</span>
+            <ExternalLink size={13} aria-hidden="true" className="text-ink-3" />
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
         </nav>
 
         <div className="flex items-center justify-end gap-1 sm:gap-2">
