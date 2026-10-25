@@ -81,6 +81,12 @@ export const watcherUrl = (machineUrl: string) => {
   return `${url.protocol}//${url.hostname}/health`;
 };
 
+// Every machine image also serves the Profile Plotter, on the same web server.
+export const plotterUrl = (machineUrl: string) => {
+  const url = new URL(machineUrl);
+  return `${url.protocol}//${url.hostname}/debug/plotter-ui/`;
+};
+
 // Profile images come back as paths relative to the machine.
 export const profileImageUrl = (machineUrl: string, image?: string) => {
   if (!image) return undefined;
