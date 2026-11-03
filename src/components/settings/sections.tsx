@@ -348,6 +348,7 @@ export const SystemSection = () => {
           settingKey="usb_mode"
           label="USB mode"
           description="How the machine’s USB port behaves."
+          disabled
           options={[
             { value: "host", label: "Host (drives, accessories)" },
             { value: "client", label: "Client (network over USB)" },
