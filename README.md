@@ -8,8 +8,8 @@ indicator reflects the fixture's lack of a Socket.IO connection.
 - After: the same source with `disabled` on the USB mode SelectSetting.
 - Both captures show the same stored value: Host (drives, accessories).
 
-| Before | After |
-| --- | --- |
+| Before                | After               |
+| --------------------- | ------------------- |
 | ![Before](before.png) | ![After](after.png) |
 
 The baseline browser run selected Client and observed a `usb_mode` POST. The
@@ -24,3 +24,28 @@ in the disabled select. With `usb_mode` absent, the row stayed absent as before.
 
 These are browser checks with intercepted HTTP responses, not backend or
 hardware validation. The product change is limited to this settings control.
+
+## Reproduce the browser check
+
+Use Node.js with Playwright 1.62.1 and its Chromium browser available to the
+script. In this evidence checkout, install them if needed:
+
+```sh
+npm install --no-save --package-lock=false playwright@1.62.1
+npx playwright install chromium
+```
+
+Run the web UI's Vite development server from the source version being checked
+(`npm ci`, then `npm run dev`). Set `APP_URL` to that server's URL. The script
+adds the simulated machine address and the Settings → System route itself; it
+intercepts the fixture's API requests and does not need a physical machine.
+
+```sh
+node check.cjs before "$APP_URL" # unchanged baseline
+node check.cjs after "$APP_URL"  # disabled-control change
+```
+
+Alternatively, export `APP_URL` and run `node check.cjs after`. Each run writes
+its screenshot beside the script. To preserve the captures committed here, run
+a copy of the script in a separate output directory with Playwright available
+through Node's module resolution (for example, an existing `NODE_PATH`).
