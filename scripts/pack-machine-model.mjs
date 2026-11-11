@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { join } from "node:path";
 import { MeshoptSimplifier } from "meshoptimizer";
+import { format, resolveConfig } from "prettier";
 
 const [modelDir, outDir] = process.argv.slice(2);
 const readModel = (name) => {
@@ -229,9 +230,14 @@ for (const mesh of manifest.meshes) {
 mkdirSync(outDir, { recursive: true });
 const packed = gzipSync(Buffer.concat(chunks), { level: 9 });
 writeFileSync(join(outDir, "machine.bin.gz"), packed);
+// Formatted as the repo's Prettier check expects.
+const manifestFile = join(outDir, "machine.json");
 writeFileSync(
-  join(outDir, "machine.json"),
-  JSON.stringify({ units: "mm", scale: 1 / SCALE, meshes }, null, 0) + "\n",
+  manifestFile,
+  await format(JSON.stringify({ units: "mm", scale: 1 / SCALE, meshes }), {
+    ...(await resolveConfig(manifestFile)),
+    filepath: manifestFile,
+  }),
 );
 const triangles = meshes.reduce((sum, m) => sum + m.indices / 3, 0);
 console.log(
