@@ -1,0 +1,272 @@
+{
+  "units": "mm",
+  "scale": 0.015625,
+  "meshes": [
+    {
+      "id": "base",
+      "vertices": 8632,
+      "indices": 26052,
+      "position": 0,
+      "index": 51792
+    },
+    {
+      "id": "foot-front-left",
+      "vertices": 190,
+      "indices": 528,
+      "position": 103896,
+      "index": 105036
+    },
+    {
+      "id": "foot-rear-left",
+      "vertices": 190,
+      "indices": 528,
+      "position": 106092,
+      "index": 107232
+    },
+    {
+      "id": "foot-front-right",
+      "vertices": 190,
+      "indices": 528,
+      "position": 108288,
+      "index": 109428
+    },
+    {
+      "id": "foot-rear-right",
+      "vertices": 190,
+      "indices": 528,
+      "position": 110484,
+      "index": 111624
+    },
+    {
+      "id": "tare-button",
+      "vertices": 4776,
+      "indices": 4860,
+      "position": 112680,
+      "index": 141336
+    },
+    {
+      "id": "tower-shell",
+      "vertices": 2896,
+      "indices": 8184,
+      "position": 151056,
+      "index": 168432
+    },
+    {
+      "id": "tower-top",
+      "vertices": 116,
+      "indices": 300,
+      "position": 184800,
+      "index": 185496
+    },
+    {
+      "id": "upper-shell",
+      "vertices": 248,
+      "indices": 612,
+      "position": 186096,
+      "index": 187584
+    },
+    {
+      "id": "upper-lid",
+      "vertices": 116,
+      "indices": 300,
+      "position": 188808,
+      "index": 189504
+    },
+    {
+      "id": "upper-floor",
+      "vertices": 238,
+      "indices": 624,
+      "position": 190104,
+      "index": 191532
+    },
+    {
+      "id": "rear-shell",
+      "vertices": 1216,
+      "indices": 3408,
+      "position": 192780,
+      "index": 200076
+    },
+    {
+      "id": "plunger-tube",
+      "vertices": 2086,
+      "indices": 6138,
+      "position": 206892,
+      "index": 219408
+    },
+    {
+      "id": "brew-platform-top",
+      "vertices": 9480,
+      "indices": 9534,
+      "position": 231684,
+      "index": 288564
+    },
+    {
+      "id": "funnel",
+      "vertices": 6589,
+      "indices": 28614,
+      "position": 307632,
+      "index": 347166
+    },
+    {
+      "id": "brew-platform-bottom",
+      "vertices": 12284,
+      "indices": 12348,
+      "position": 404394,
+      "index": 478098
+    },
+    {
+      "id": "context-button",
+      "vertices": 4776,
+      "indices": 4860,
+      "position": 502794,
+      "index": 531450
+    },
+    {
+      "id": "upper-plug",
+      "vertices": 949,
+      "indices": 2742,
+      "position": 541170,
+      "index": 546864
+    },
+    {
+      "id": "scale-base",
+      "vertices": 564,
+      "indices": 564,
+      "position": 552348,
+      "index": 555732
+    },
+    {
+      "id": "scale-cover",
+      "vertices": 876,
+      "indices": 876,
+      "position": 556860,
+      "index": 562116
+    },
+    {
+      "id": "scale-foot-front-left",
+      "vertices": 3186,
+      "indices": 3270,
+      "position": 563868,
+      "index": 582984
+    },
+    {
+      "id": "scale-foot-rear-left",
+      "vertices": 3186,
+      "indices": 3270,
+      "position": 589524,
+      "index": 608640
+    },
+    {
+      "id": "scale-foot-front-right",
+      "vertices": 3186,
+      "indices": 3270,
+      "position": 615180,
+      "index": 634296
+    },
+    {
+      "id": "scale-foot-rear-right",
+      "vertices": 3186,
+      "indices": 3270,
+      "position": 640836,
+      "index": 659952
+    },
+    {
+      "id": "encoder",
+      "vertices": 1152,
+      "indices": 4644,
+      "position": 666492,
+      "index": 673404
+    },
+    {
+      "id": "display-lens",
+      "vertices": 428,
+      "indices": 1248,
+      "position": 682692,
+      "index": 685260
+    },
+    {
+      "id": "scale-socket",
+      "vertices": 4583,
+      "indices": 4791,
+      "position": 687756,
+      "index": 715254
+    },
+    {
+      "id": "heel-shell",
+      "vertices": 248,
+      "indices": 612,
+      "position": 724836,
+      "index": 726324
+    },
+    {
+      "id": "tray-shell",
+      "vertices": 248,
+      "indices": 612,
+      "position": 727548,
+      "index": 729036
+    },
+    {
+      "id": "tray-grate",
+      "vertices": 2420,
+      "indices": 6192,
+      "position": 730260,
+      "index": 744780
+    },
+    {
+      "id": "shower-screen",
+      "vertices": 26140,
+      "indices": 86208,
+      "position": 757164,
+      "index": 914004
+    },
+    {
+      "id": "rear-surround",
+      "vertices": 2496,
+      "indices": 2496,
+      "position": 1086420,
+      "index": 1101396
+    },
+    {
+      "id": "rear-fascia",
+      "vertices": 1332,
+      "indices": 1332,
+      "position": 1106388,
+      "index": 1114380
+    },
+    {
+      "id": "power-socket",
+      "vertices": 312,
+      "indices": 312,
+      "position": 1117044,
+      "index": 1118916
+    },
+    {
+      "id": "usb-port",
+      "vertices": 1860,
+      "indices": 1860,
+      "position": 1119540,
+      "index": 1130700
+    },
+    {
+      "id": "power-button",
+      "vertices": 196,
+      "indices": 384,
+      "position": 1134420,
+      "index": 1135596
+    },
+    {
+      "id": "expansion-port-faces",
+      "vertices": 1680,
+      "indices": 1680,
+      "position": 1136364,
+      "index": 1146444
+    },
+    {
+      "id": "drip-tray",
+      "vertices": 1002,
+      "indices": 6000,
+      "position": 1149804,
+      "index": 1155816
+    }
+  ]
+}
