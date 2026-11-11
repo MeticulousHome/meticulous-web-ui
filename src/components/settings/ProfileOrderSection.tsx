@@ -26,6 +26,7 @@ import {
   useUpdateSettings,
 } from "../../hooks/useMachineData";
 import { setNavigationGuard } from "../../lib/navigationGuard";
+import { normalizeProfileOrder } from "../../lib/profileOrder";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { useToast } from "../ui/Toast";
@@ -89,6 +90,10 @@ export const ProfileOrderSection = () => {
   const mutation = useUpdateSettings();
   const notify = useToast();
   const saved = settings?.profile_order;
+  const normalizedSaved = useMemo(
+    () => (saved ? normalizeProfileOrder(saved) : undefined),
+    [saved],
+  );
   const [order, setOrder] = useState<string[]>([]);
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -98,14 +103,17 @@ export const ProfileOrderSection = () => {
   );
 
   useEffect(() => {
-    if (saved) setOrder(saved);
-  }, [saved]);
+    if (normalizedSaved) setOrder(normalizedSaved);
+  }, [normalizedSaved]);
 
   const byId = useMemo(
     () => new Map((profiles ?? []).map((profile) => [profile.id, profile])),
     [profiles],
   );
-  const changed = !!saved && order.join() !== saved.join();
+  const changed = !!normalizedSaved && order.join() !== normalizedSaved.join();
+  // Repairing persisted duplicates should enable Save without marking a fresh
+  // visit as a user edit or trapping navigation behind an unsaved prompt.
+  const needsRepair = !!saved && normalizedSaved?.join() !== saved.join();
   // A navigation held until the user saves or discards the new order.
   const [pendingNavigation, setPendingNavigation] = useState<
     (() => void) | null
@@ -165,7 +173,7 @@ export const ProfileOrderSection = () => {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => saved && setOrder(saved)}
+              onClick={() => normalizedSaved && setOrder(normalizedSaved)}
             >
               Reset
             </Button>
@@ -173,7 +181,7 @@ export const ProfileOrderSection = () => {
           <Button
             size="sm"
             variant="primary"
-            disabled={!changed}
+            disabled={!changed && !needsRepair}
             loading={mutation.isPending && !pendingNavigation}
             onClick={() => saveOrder()}
           >
@@ -219,7 +227,7 @@ export const ProfileOrderSection = () => {
             <Button
               variant="outline"
               onClick={() => {
-                if (saved) setOrder(saved);
+                if (normalizedSaved) setOrder(normalizedSaved);
                 if (pendingNavigation) leave(pendingNavigation);
               }}
             >
