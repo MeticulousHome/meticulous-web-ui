@@ -8,6 +8,11 @@
 // answer 403 to any request whose X-Real-IP is not a loopback address, so they
 // only work from the machine itself (Dial) or through an SSH tunnel; the
 // explorer lists them but doesn't send them.
+//
+// When the machine requires device authorization, every other /api call
+// needs this browser's token (the explorer sends it) and answers 401
+// UNAUTHORIZED without one. The exceptions are GET /api/v1/machine, profile
+// images and the public Auth endpoints.
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -84,6 +89,7 @@ const USER_SETTING_KEYS = [
   "profile_order",
   "hostname_override",
   "clock_format_24_hour",
+  "require_authorization",
 ];
 
 const SOUND_NAMES = [
@@ -273,6 +279,113 @@ export const ENDPOINTS: Endpoint[] = [
       " Returns the password in clear text ('root' when none is stored).",
   },
 
+  // Auth
+  {
+    id: "auth-validate-get",
+    group: "Auth",
+    method: "GET",
+    path: "/api/v1/auth/validate",
+    summary: "Check whether this browser may use the API",
+    response: "json",
+    notes:
+      "200 exactly when a request from here would be admitted: {required, local, token_valid, device}. 401 UNAUTHORIZED (with required: true) otherwise. A machine without device authorization answers 404.",
+  },
+  {
+    id: "auth-request-post",
+    group: "Auth",
+    method: "POST",
+    path: "/api/v1/auth/request",
+    summary: "Ask for access: shows an Allow / Deny question on the machine",
+    body: { kind: "json", example: { name: "Chrome on macOS" } },
+    response: "json",
+    danger: "caution",
+    notes:
+      "202 {id, expires_in: 60}. Only someone at the machine can answer. 409 REQUEST_PENDING while another request waits; more than 5 requests in 60 s answer 429 with Retry-After. 400 INVALID_REQUEST for an empty name.",
+  },
+  {
+    id: "auth-request-status-get",
+    group: "Auth",
+    method: "GET",
+    path: "/api/v1/auth/request/{id}",
+    summary: "Poll an access request",
+    params: [
+      {
+        name: "id",
+        in: "path",
+        required: true,
+        type: "string",
+        description: "The id from POST /auth/request",
+      },
+    ],
+    response: "json",
+    notes:
+      "status is pending, denied, expired or approved; approved also carries a one-time code (10 minutes) for POST /auth/token. 404 NOT_FOUND for an unknown id.",
+  },
+  {
+    id: "auth-token-post",
+    group: "Auth",
+    method: "POST",
+    path: "/api/v1/auth/token",
+    summary: "Exchange a pairing code for a device token",
+    body: { kind: "json", example: { code: "ABCD-EFGH", name: "My laptop" } },
+    response: "json",
+    danger: "caution",
+    notes:
+      "Spends the code. 200 {token, device: {id, name}}; the explorer shows the token but doesn't keep it. 401 INVALID_CODE for an unknown, expired or used code, 400 INVALID_REQUEST without one; 10 failures in 60 s lock it for 30 s (429 with Retry-After).",
+  },
+  {
+    id: "auth-pairing-grant-post",
+    group: "Auth",
+    method: "POST",
+    path: "/api/v1/auth/pairing",
+    summary: "Create a pairing code for another device",
+    params: [
+      {
+        name: "mode",
+        in: "query",
+        required: true,
+        type: "string",
+        options: ["grant"],
+        default: "grant",
+      },
+    ],
+    response: "json",
+    danger: "caution",
+    notes:
+      "Needs a valid token even while authorization is off (401 UNAUTHORIZED otherwise). 200 {code, pair_url, expires_in: 600}; the code works once.",
+  },
+  {
+    id: "auth-pairing-new-post",
+    group: "Auth",
+    method: "POST",
+    path: "/api/v1/auth/pairing",
+    summary: "Create a pairing code for the Dial's Pair a device screen",
+    params: [
+      {
+        name: "mode",
+        in: "query",
+        required: true,
+        type: "string",
+        options: ["new"],
+        default: "new",
+      },
+    ],
+    response: "json",
+    notes: LOCAL_ONLY + " 200 {code, pair_url, expires_in: 600}.",
+  },
+  {
+    id: "auth-sign-out-all-post",
+    group: "Auth",
+    method: "POST",
+    path: "/api/v1/auth/sign_out_all",
+    summary: "Sign out all devices",
+    response: "json",
+    danger: "destructive",
+    notes:
+      LOCAL_ONLY +
+      " Replaces the signing key, so every issued token stops working, and drops open pairing codes and access requests.",
+  },
+
   // Settings
   {
     id: "settings-get",
@@ -313,7 +426,7 @@ export const ENDPOINTS: Endpoint[] = [
     response: "json",
     danger: "caution",
     notes:
-      "Send only the keys to change; each value must keep the stored type (unknown key or wrong type answers 404, nothing is saved). Answers all settings and emits the socket event 'settings'. Side effects: ssh_enabled starts or stops SSH, update_channel changes the OTA channel, usb_mode switches the USB role, time_zone and timezone_sync change the system time zone, and heating_timeout, auto_purge_after_shot, tare_behavior and partial_retraction are pushed to the ESP32.",
+      "Send only the keys to change; each value must keep the stored type (unknown key or wrong type answers 404, nothing is saved). Answers all settings and emits the socket event 'settings'. Side effects: ssh_enabled starts or stops SSH, update_channel changes the OTA channel, usb_mode switches the USB role, time_zone and timezone_sync change the system time zone, and heating_timeout, auto_purge_after_shot, tare_behavior and partial_retraction are pushed to the ESP32. require_authorization can only be changed on the machine (403 LOCAL_ONLY from anywhere else).",
   },
   {
     id: "timezones-get",

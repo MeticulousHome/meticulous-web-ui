@@ -1,5 +1,5 @@
-import { useId, useMemo } from "react";
-import { TriangleAlert } from "lucide-react";
+import { useId, useMemo, useState } from "react";
+import { LogOut, TriangleAlert } from "lucide-react";
 import { CAN_CHANGE_MACHINE } from "../../api/api";
 import { useMachine } from "../../contexts/MachineProvider";
 import { useDeviceInfo, useSettings } from "../../hooks/useMachineData";
@@ -11,11 +11,15 @@ import {
 } from "../../lib/retraction";
 import { useThemePreference, type ThemePreference } from "../../theme";
 import { MachineAddressForm } from "../connection/MachineAddressForm";
+import { Button } from "../ui/Button";
+import { Dialog } from "../ui/Dialog";
 import { Segmented } from "../ui/Segmented";
 import { Switch } from "../ui/Switch";
+import { useToast } from "../ui/Toast";
 import {
   LockedSetting,
   NumberSetting,
+  ReadOnlySetting,
   SelectSetting,
   SettingRow,
   SettingsCard,
@@ -24,6 +28,72 @@ import {
 } from "./fields";
 import { UpdateChannelSetting } from "./UpdateChannelSetting";
 import { useSettingSaver } from "./useSettingSaver";
+
+// Whether the machine requires device authorization, which only the machine
+// itself can change, and this browser's own access.
+const AuthorizationCard = () => {
+  const { token, signOut } = useMachine();
+  const { data } = useSettings();
+  const notify = useToast();
+  const [confirming, setConfirming] = useState(false);
+  const required = data?.require_authorization;
+
+  // Machines without device authorization report neither.
+  if (typeof required !== "boolean" && !token) return null;
+
+  return (
+    <SettingsCard title="Access">
+      {typeof required === "boolean" && (
+        <ReadOnlySetting
+          label="Device authorization"
+          value={required ? "Required" : "Not required"}
+          description="Change it on the machine."
+        />
+      )}
+      {token && (
+        <SettingRow
+          label="This browser"
+          description="Allowed to use this machine. Signing out forgets that here; the machine keeps working for your other devices."
+        >
+          <Button variant="outline" onClick={() => setConfirming(true)}>
+            <LogOut size={16} />
+            Sign out this browser
+          </Button>
+        </SettingRow>
+      )}
+      <Dialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        size="sm"
+        title="Sign out this browser?"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirming(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              data-autofocus
+              onClick={() => {
+                setConfirming(false);
+                signOut();
+                notify("This browser is signed out.", "success");
+              }}
+            >
+              Sign out
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-ink-2">
+          {required === false
+            ? "The machine doesn’t require authorization right now, so this page keeps working. If it does later, you’ll have to connect this browser again."
+            : "To use this page again you’ll have to ask for access and confirm on the machine, or enter a pairing code."}
+        </p>
+      </Dialog>
+    </SettingsCard>
+  );
+};
 
 export const MachineSection = () => {
   const { machineUrl, connection } = useMachine();
@@ -97,6 +167,8 @@ export const MachineSection = () => {
           </dl>
         )}
       </SettingsCard>
+
+      <AuthorizationCard />
 
       <SettingsCard title="Appearance">
         <SettingRow label="Theme" description="Applies to this browser only.">
@@ -405,6 +477,8 @@ const DEDICATED_KEYS = new Set([
   "hostname_override",
   "telemetry_service_enabled",
   "profile_order",
+  // Shown read-only under Machine: only the machine itself may change it.
+  "require_authorization",
 ]);
 
 // What a key does, where we know; otherwise the row shows the raw key.

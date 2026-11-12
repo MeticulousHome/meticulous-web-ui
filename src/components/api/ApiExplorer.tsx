@@ -241,7 +241,7 @@ const ResponseView = ({ result }: { result: ApiResult }) => {
 };
 
 const RequestPanel = ({ endpoint }: { endpoint: Endpoint }) => {
-  const { machineUrl } = useMachine();
+  const { machineUrl, token } = useMachine();
   // nginx forwards the browser's address, so the backend's loopback check
   // refuses these from any browser, including on the machine's own page.
   const localOnly = isLocalOnly(endpoint);
@@ -279,6 +279,7 @@ const RequestPanel = ({ endpoint }: { endpoint: Endpoint }) => {
           target.url,
           body.body,
           body.contentType,
+          token,
         ),
       );
     } catch (requestError) {
@@ -294,7 +295,7 @@ const RequestPanel = ({ endpoint }: { endpoint: Endpoint }) => {
   const copyCurl = async () => {
     try {
       await navigator.clipboard.writeText(
-        curlCommand(endpoint.method, previewUrl, endpoint, draft),
+        curlCommand(endpoint.method, previewUrl, endpoint, draft, !!token),
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);

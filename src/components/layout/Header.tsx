@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { ExternalLink, Monitor, Moon, Sun } from "lucide-react";
-import { useMachine } from "../../contexts/MachineProvider";
+import {
+  useMachine,
+  type ConnectionState,
+} from "../../contexts/MachineProvider";
 import { useDeviceInfo } from "../../hooks/useMachineData";
 import type { Tab } from "../../hooks/useRoute";
 import { useThemePreference, type ThemePreference } from "../../theme";
@@ -28,16 +31,18 @@ const THEME_ICON = {
   system: <Monitor size={18} />,
 };
 
-const CONNECTION_LABEL = {
+const CONNECTION_LABEL: Record<ConnectionState, string> = {
   connected: "Connected",
   connecting: "Connecting",
   disconnected: "Offline",
+  unauthorized: "Not allowed",
 };
 
-const CONNECTION_DOT = {
+const CONNECTION_DOT: Record<ConnectionState, string> = {
   connected: "bg-good",
   connecting: "bg-warn animate-pulse",
   disconnected: "bg-bad",
+  unauthorized: "bg-warn",
 };
 
 interface HeaderProps {

@@ -92,17 +92,23 @@ export const buildBody = (
   return { body: form };
 };
 
+// token: this browser's device token, sent as a Bearer header when there is
+// one, like the rest of the page does.
 export const sendRequest = async (
   method: string,
   url: string,
   body?: BodyInit,
   contentType?: string,
+  token?: string,
 ): Promise<ApiResult> => {
   const started = performance.now();
+  const headers: Record<string, string> = {};
+  if (contentType) headers["Content-Type"] = contentType;
+  if (token) headers.Authorization = `Bearer ${token}`;
   const response = await fetch(url, {
     method,
     body: method === "GET" || method === "HEAD" ? undefined : body,
-    headers: contentType ? { "Content-Type": contentType } : undefined,
+    headers,
   });
   const blob = await response.blob();
   const durationMs = performance.now() - started;
@@ -137,13 +143,19 @@ export const sendRequest = async (
 
 const shellQuote = (value: string) => `'${value.replace(/'/g, `'\\''`)}'`;
 
+// withToken adds the Authorization header with a $METICULOUS_TOKEN
+// placeholder: a copied command must never carry this browser's real token.
 export const curlCommand = (
   method: string,
   url: string,
   endpoint: Endpoint,
   draft: RequestDraft,
+  withToken = false,
 ) => {
   const parts = ["curl", "-X", method, shellQuote(url)];
+  if (withToken) {
+    parts.push("-H", '"Authorization: Bearer $METICULOUS_TOKEN"');
+  }
   const spec = endpoint.body;
   if (spec?.kind === "json" && draft.body.trim()) {
     let compact = draft.body;

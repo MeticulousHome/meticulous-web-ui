@@ -14,7 +14,8 @@ export const ConnectionBanner = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (connection === "connected") {
+    // Not allowed is not unreachable: the connect screen explains that one.
+    if (connection === "connected" || connection === "unauthorized") {
       setVisible(false);
       return;
     }

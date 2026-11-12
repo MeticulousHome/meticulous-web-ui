@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Archive, Download } from "lucide-react";
 import { useMachine } from "../../contexts/MachineProvider";
+import { authHeaders } from "../../api/api";
 import { saveBlob } from "../../lib/download";
 import { Button } from "../ui/Button";
 import { Segmented } from "../ui/Segmented";
@@ -44,7 +45,7 @@ const fieldClass =
   "h-9 rounded-lg border border-line-strong bg-canvas px-3 text-sm text-ink focus:border-ink-2 focus:outline-none disabled:opacity-50";
 
 const LogDownload = () => {
-  const { watcherUrl } = useMachine();
+  const { watcherUrl, token } = useMachine();
   const [rangeMode, setRangeMode] = useState<RangeMode>("hours");
   const [hours, setHours] = useState(24);
   const [date, setDate] = useState(localDate);
@@ -139,7 +140,8 @@ const LogDownload = () => {
         filename = `machine-journal-${rangeStart}-to-${rangeEnd}.log`;
       }
 
-      const response = await fetch(url);
+      // The web server lets /health through only for allowed devices.
+      const response = await fetch(url, { headers: authHeaders(token) });
       if (!response.ok) {
         throw new Error(
           (await response.text()) || `Request failed (${response.status})`,
@@ -316,7 +318,7 @@ const LogDownload = () => {
 };
 
 const SystemArchive = () => {
-  const { watcherUrl } = useMachine();
+  const { watcherUrl, token } = useMachine();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -324,7 +326,9 @@ const SystemArchive = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${watcherUrl}/archive`);
+      const response = await fetch(`${watcherUrl}/archive`, {
+        headers: authHeaders(token),
+      });
       if (!response.ok) {
         throw new Error(`Archive request failed: ${response.statusText}`);
       }

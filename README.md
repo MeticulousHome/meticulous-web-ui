@@ -36,6 +36,13 @@ The machine's API and socket allow any origin, so no proxy is needed. A few
 endpoints only answer callers on the machine itself; the API explorer marks
 them "Local only" and doesn't send them.
 
+When the machine requires device authorization, the page shows "Connect to
+this machine" until it is allowed: ask for access and press Allow on the
+machine, or enter a pairing code. The browser keeps one token per machine
+address (`meticulous:device-tokens`), so the dev server pairs separately from
+the machine's own page. Opening a pair URL (`http://<machine>/#pair=<code>`)
+pairs the page by itself.
+
 ## Checks
 
 CI runs `npm test`, `npx prettier . --check`, `npx eslint .`, `npx tsc --noEmit` and

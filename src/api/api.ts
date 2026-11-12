@@ -1,4 +1,10 @@
 import Api from "@meticulous-home/espresso-api";
+import {
+  deviceNameFromUserAgent,
+  hasPairPart,
+  hashWithoutPair,
+  pairCodeFromHash,
+} from "../lib/deviceAuth";
 
 // Which machine the UI talks to. A production build is served by the machine
 // and always talks to it: the page's own origin. Only the dev server lets you
@@ -72,7 +78,36 @@ export const saveMachineUrl = (url: string | null) => {
   return url ?? defaultMachineUrl();
 };
 
-export const createApi = (machineUrl: string) => new Api(undefined, machineUrl);
+// One client per machine and token. onUnauthorized runs when the machine
+// answers that this browser needs to be allowed (again).
+export const createApi = (
+  machineUrl: string,
+  token?: string,
+  onUnauthorized?: () => void,
+) => new Api({ onUnauthorized }, machineUrl, token);
+
+// Headers for the calls that don't go through the API client (logs, archive,
+// the API explorer). No token, no header: older machines keep working.
+export const authHeaders = (token?: string): Record<string, string> =>
+  token ? { Authorization: `Bearer ${token}` } : {};
+
+// "Chrome on macOS": how the machine names this browser.
+export const deviceName = () =>
+  deviceNameFromUserAgent(navigator.userAgent, navigator.maxTouchPoints);
+
+// A pair URL (http://<machine>/#pair=ABCDEFGH) carries a one-time code in its
+// fragment. Takes it out of the address bar at once, so it doesn't stay in
+// the history or get bookmarked, and returns it (null when there is none).
+export const takePairCodeFromLocation = (): string | null => {
+  const { hash, pathname, search } = window.location;
+  if (!hasPairPart(hash)) return null;
+  window.history.replaceState(
+    null,
+    "",
+    `${pathname}${search}${hashWithoutPair(hash)}`,
+  );
+  return pairCodeFromHash(hash);
+};
 
 // The system watcher (logs, archive) sits behind the machine's web server on
 // the default port, next to the backend.
