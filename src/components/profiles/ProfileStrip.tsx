@@ -93,7 +93,7 @@ export const ProfileStrip = ({ onViewAll }: { onViewAll: () => void }) => {
                   key={index}
                   className={`${CARD_WIDTH} shrink-0 animate-pulse rounded-xl bg-surface p-2 ring-1 ring-line`}
                 >
-                  <div className="aspect-[16/10] rounded-lg bg-raised" />
+                  <div className="aspect-square rounded-lg bg-raised" />
                   <div className="mx-1.5 my-4 h-3 w-24 rounded bg-raised" />
                 </div>
               ))
