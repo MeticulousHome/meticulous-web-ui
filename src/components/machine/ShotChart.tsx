@@ -5,7 +5,7 @@ import {
   useMachine,
 } from "../../contexts/MachineProvider";
 import { useLastShot } from "../../hooks/useMachineData";
-import type { ShotPoint } from "../../lib/liveStore";
+import { toNumber, type ShotPoint } from "../../lib/liveStore";
 import { useResolvedTheme } from "../../theme";
 import {
   axisStyle,
@@ -66,11 +66,12 @@ export const ShotChart = () => {
 
   const historyPoints = useMemo<ShotPoint[]>(
     () =>
+      // A shot without a scale reading stores weight as the string "NaN".
       (lastShot.data?.data ?? []).map((point) => ({
         time: point.time / 1000,
-        pressure: point.shot.pressure,
-        weight: point.shot.weight,
-        gravimetric_flow: point.shot.gravimetric_flow,
+        pressure: toNumber(point.shot.pressure),
+        weight: toNumber(point.shot.weight),
+        gravimetric_flow: toNumber(point.shot.gravimetric_flow),
       })),
     [lastShot.data],
   );

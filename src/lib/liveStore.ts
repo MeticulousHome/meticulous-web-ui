@@ -4,7 +4,7 @@ import type { StatusData } from "@meticulous-home/espresso-api";
 // occasional "NaN" string for a sensor that isn't fitted.
 export type SensorPayload = Record<string, number | string | boolean | null>;
 
-const toNumber = (value: unknown) => {
+export const toNumber = (value: unknown) => {
   if (typeof value === "number") return value;
   if (typeof value === "boolean") return value ? 1 : 0;
   if (typeof value === "string") {
@@ -158,9 +158,9 @@ export class LiveStore {
       // Mutated in place; readers watch liveShotVersion.
       this.liveShot.push({
         time: status.time / 1000,
-        pressure: status.sensors.p,
-        weight: status.sensors.w,
-        gravimetric_flow: status.sensors.g,
+        pressure: toNumber(status.sensors.p),
+        weight: toNumber(status.sensors.w),
+        gravimetric_flow: toNumber(status.sensors.g),
       });
       this.liveShotVersion++;
     }

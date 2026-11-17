@@ -27,7 +27,7 @@ export const ShotControls = ({
   const stage = useStatusField((status) => status?.name);
   const extracting = useStatusField((status) => !!status?.extracting);
   const { connection } = useMachine();
-  const { selected, loaded, selectedName } = useOrderedProfiles();
+  const { selected, selectedName } = useOrderedProfiles();
   const { choose } = useProfileSelection();
   const action = useMachineAction();
   const loadProfile = useLoadProfile();
@@ -145,9 +145,7 @@ export const ShotControls = ({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs text-ink-2">
-            {selected && loaded && selected.id !== loaded.id
-              ? "Not loaded yet"
-              : "Selected profile"}
+            Selected profile
           </span>
           <span className="mt-1 block truncate text-xl leading-tight text-ink">
             {selectedName ?? "None"}

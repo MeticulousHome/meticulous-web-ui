@@ -79,8 +79,9 @@ export const axisStyle = (colors: ChartColors) => ({
   },
 });
 
-// "1.234" -> "1.2", keeping integers short.
-export const formatValue = (value: number | null | undefined, digits = 1) =>
-  value === null || value === undefined || Number.isNaN(value)
-    ? "–"
-    : value.toFixed(digits);
+// "1.234" -> "1.2", keeping integers short. Anything that isn't a finite
+// number (the API's "NaN" strings included) shows as a dash.
+export const formatValue = (value: unknown, digits = 1) =>
+  typeof value === "number" && Number.isFinite(value)
+    ? value.toFixed(digits)
+    : "–";

@@ -38,5 +38,5 @@ them "Local only" and doesn't send them.
 
 ## Checks
 
-CI runs `npx prettier . --check`, `npx eslint .`, `npx tsc --noEmit` and
+CI runs `npm test`, `npx prettier . --check`, `npx eslint .`, `npx tsc --noEmit` and
 `npm run build`.
